@@ -1,0 +1,55 @@
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 后端
+backend/tmp/
+backend/build/
+backend/*.log
+backend/coverage.out
+
+# 前端
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/.cache/
+frontend/*.log
+frontend/.env.local
+frontend/.env.*.local
+
+# 根目录node_modules（如果有）
+node_modules/
+
+# 日志
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 测试覆盖率
+coverage/
+*.coverage
+
+# 临时文件
+tmp/
+temp/
+*.tmp
+
+# Docker volumes数据（由docker-compose管理）
+# postgres_data/
+# redis_data/
+
