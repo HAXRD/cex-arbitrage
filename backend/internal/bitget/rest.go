@@ -55,15 +55,20 @@ func (c *client) GetContractSymbols(ctx context.Context) ([]Symbol, error) {
 	// 解析响应
 	var result ContractSymbolsResponse
 	if err := c.parseResponse(resp, &result); err != nil {
-		return nil, fmt.Errorf("parse contract symbols response: %w", err)
+		context := NewErrorContext("GetContractSymbols", "").
+			WithDetail("url", fullURL).
+			WithDetail("status_code", resp.StatusCode)
+		return nil, WrapError(err, context)
 	}
 
 	// 检查 API 错误
 	if result.Code != CodeSuccess {
-		return nil, &BitgetError{
-			Code:    result.Code,
-			Message: result.Msg,
-		}
+		bitgetErr := NewBitgetErrorWithData(result.Code, result.Msg, "")
+		context := NewErrorContext("GetContractSymbols", "").
+			WithDetail("url", fullURL).
+			WithDetail("status_code", resp.StatusCode).
+			WithDetail("api_code", result.Code)
+		return nil, WrapError(bitgetErr, context)
 	}
 
 	c.logger.Info("successfully fetched contract symbols",

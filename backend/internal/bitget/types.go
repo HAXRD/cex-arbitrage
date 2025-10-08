@@ -119,15 +119,15 @@ type WebSocketMessage struct {
 
 // WebSocketTickerData WebSocket Ticker 数据
 type WebSocketTickerData struct {
-	Action string `json:"action"` // 动作：snapshot, update
-	Data   Ticker `json:"data"`   // Ticker 数据
+	Action string   `json:"action"` // 动作：snapshot, update
+	Data   []Ticker `json:"data"`   // Ticker 数据数组
 }
 
 // WebSocketSubscription WebSocket 订阅信息
 type WebSocketSubscription struct {
-	InstType string   `json:"instType"` // 实例类型：USDT-FUTURES
-	Channel  string   `json:"channel"`  // 频道：ticker
-	InstId   []string `json:"instId"`   // 交易对列表
+	InstType string `json:"instType"` // 实例类型：USDT-FUTURES
+	Channel  string `json:"channel"`  // 频道：ticker
+	InstId   string `json:"instId"`   // 交易对（单个）
 }
 
 // WebSocketRequest WebSocket 请求
