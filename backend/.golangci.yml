@@ -1,0 +1,51 @@
+# golangci-lint配置文件
+
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+
+linters:
+  enable:
+    - gofmt          # 代码格式化检查
+    - goimports      # import排序检查
+    - govet          # Go静态分析
+    - errcheck       # 错误检查
+    - staticcheck    # 静态分析
+    - unused         # 未使用代码检测
+    - gosimple       # 代码简化建议
+    - ineffassign    # 无效赋值检测
+    - typecheck      # 类型检查
+  disable:
+    - structcheck    # 已废弃
+    - deadcode       # 已废弃
+    - varcheck       # 已废弃
+
+linters-settings:
+  gofmt:
+    simplify: true
+  
+  govet:
+    check-shadowing: true
+  
+  errcheck:
+    check-type-assertions: true
+    check-blank: false
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  
+  exclude-rules:
+    # 排除测试文件中的某些检查
+    - path: _test\.go
+      linters:
+        - errcheck
+        - gosec
+

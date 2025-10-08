@@ -1,0 +1,40 @@
+basePath: /
+definitions:
+  handlers.HealthResponse:
+    properties:
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API支持
+    url: http://www.swagger.io/support
+  description: 加密货币合约交易信号捕捉系统 API
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: CryptoSignal Hunter API
+  version: "1.0"
+paths:
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: 检查服务是否正常运行
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.HealthResponse'
+      summary: 健康检查
+      tags:
+      - 系统
+swagger: "2.0"
+

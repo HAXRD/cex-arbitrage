@@ -1,0 +1,31 @@
+server:
+  port: 8080
+  mode: debug  # debug/release
+
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  dbname: cryptosignal
+  sslmode: disable
+
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+
+bitget:
+  rest_base_url: "https://api.bitget.com"
+  rest_backup_url: "https://aws.bitget.com"
+  ws_url: "wss://ws.bitget.com/v2/ws/public"
+  ws_backup_url: "wss://aws-ws.bitget.com/v2/ws/public"
+  timeout: 10s                    # HTTP 请求超时
+  rate_limit: 10                  # 每秒请求限制（建议值，实际限制20）
+  ws_ping_interval: 30s           # WebSocket 心跳间隔
+  ws_pong_timeout: 60s            # 心跳超时时间
+  max_reconnect_attempts: 10      # 最大重连次数
+  reconnect_base_delay: 1s        # 重连基础延迟
+  reconnect_max_delay: 60s        # 重连最大延迟
+
