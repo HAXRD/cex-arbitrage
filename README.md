@@ -49,6 +49,89 @@
 - **Docker** & **Docker Compose**
 - **Git**
 
+## 🌐 网络代理配置
+
+> **注意**: 如果您在国内网络环境下开发，需要配置代理以访问外部服务
+
+### 设置代理环境变量
+
+在每次运行涉及第三方服务调用的命令前，请先设置代理：
+
+```bash
+# 设置代理环境变量（请根据您的代理配置调整端口）
+export https_proxy=http://127.0.0.1:7890
+export http_proxy=http://127.0.0.1:7890
+export all_proxy=socks5://127.0.0.1:7890
+
+# 验证代理设置
+echo $https_proxy
+echo $http_proxy
+echo $all_proxy
+```
+
+### 常用代理配置
+
+**Clash 代理**:
+```bash
+export https_proxy=http://127.0.0.1:7890
+export http_proxy=http://127.0.0.1:7890
+export all_proxy=socks5://127.0.0.1:7890
+```
+
+**V2Ray 代理**:
+```bash
+export https_proxy=http://127.0.0.1:1087
+export http_proxy=http://127.0.0.1:1087
+export all_proxy=socks5://127.0.0.1:1087
+```
+
+**Go 模块代理**:
+```bash
+# 设置 Go 模块代理（推荐）
+export GOPROXY=https://goproxy.cn,direct
+```
+
+### 需要代理的操作
+
+以下操作需要网络代理支持：
+
+- `go mod download` - 下载 Go 模块
+- `go install` - 安装 Go 工具
+- `pnpm install` - 安装前端依赖
+- `docker pull` - 拉取 Docker 镜像
+- 集成测试中的真实 API 调用
+- 访问外部 API 服务
+
+### 永久配置代理
+
+**方法一：添加到 shell 配置文件**
+
+```bash
+# 编辑 ~/.bashrc 或 ~/.zshrc
+echo 'export https_proxy=http://127.0.0.1:7890' >> ~/.bashrc
+echo 'export http_proxy=http://127.0.0.1:7890' >> ~/.bashrc
+echo 'export all_proxy=socks5://127.0.0.1:7890' >> ~/.bashrc
+echo 'export GOPROXY=https://goproxy.cn,direct' >> ~/.bashrc
+
+# 重新加载配置
+source ~/.bashrc
+```
+
+**方法二：使用 .env 文件**
+
+```bash
+# 在项目根目录创建 .env 文件
+cat > .env << EOF
+https_proxy=http://127.0.0.1:7890
+http_proxy=http://127.0.0.1:7890
+all_proxy=socks5://127.0.0.1:7890
+GOPROXY=https://goproxy.cn,direct
+EOF
+
+# 在需要时加载环境变量
+source .env
+```
+
 ## 🚀 快速开始
 
 ### 1. 克隆项目
@@ -73,6 +156,12 @@ docker-compose ps
 ```bash
 cd backend
 
+# 设置代理（国内网络环境）
+export https_proxy=http://127.0.0.1:7890
+export http_proxy=http://127.0.0.1:7890
+export all_proxy=socks5://127.0.0.1:7890
+export GOPROXY=https://goproxy.cn,direct
+
 # 安装依赖
 go mod download
 
@@ -92,6 +181,11 @@ make run
 
 ```bash
 cd frontend
+
+# 设置代理（国内网络环境）
+export https_proxy=http://127.0.0.1:7890
+export http_proxy=http://127.0.0.1:7890
+export all_proxy=socks5://127.0.0.1:7890
 
 # 安装依赖
 pnpm install
@@ -289,6 +383,44 @@ pnpm lint --fix
 
 # 再次尝试提交
 git commit -m "your message"
+```
+
+### 6. 网络连接问题
+
+**问题**: 在国内网络环境下无法访问外部服务
+
+**解决方案**:
+```bash
+# 设置代理环境变量
+export https_proxy=http://127.0.0.1:7890
+export http_proxy=http://127.0.0.1:7890
+export all_proxy=socks5://127.0.0.1:7890
+export GOPROXY=https://goproxy.cn,direct
+
+# 验证代理设置
+curl -I https://api.bitget.com
+
+# 如果使用不同的代理端口，请相应调整
+# Clash: 7890, V2Ray: 1087, Shadowsocks: 1080
+```
+
+### 7. Go模块下载失败
+
+**问题**: `go mod download` 或 `go install` 失败
+
+**解决方案**:
+```bash
+# 设置Go模块代理
+export GOPROXY=https://goproxy.cn,direct
+
+# 清理模块缓存
+go clean -modcache
+
+# 重新下载
+go mod download
+
+# 如果仍然失败，尝试使用七牛云代理
+export GOPROXY=https://goproxy.io,direct
 ```
 
 ## 📝 开发规范
