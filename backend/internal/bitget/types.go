@@ -6,98 +6,107 @@ import (
 
 // Symbol 交易对信息
 type Symbol struct {
-	Symbol           string `json:"symbol"`           // 交易对名称，如 BTCUSDT
-	BaseCoin         string `json:"baseCoin"`         // 基础币种，如 BTC
-	QuoteCoin        string `json:"quoteCoin"`        // 计价币种，如 USDT
-	MinTradeNum      string `json:"minTradeNum"`      // 最小交易数量
-	MaxTradeNum      string `json:"maxTradeNum"`      // 最大交易数量
-	TakerFeeRate     string `json:"takerFeeRate"`     // Taker 手续费率
-	MakerFeeRate     string `json:"makerFeeRate"`     // Maker 手续费率
-	PriceScale       string `json:"priceScale"`       // 价格精度
-	QuantityScale    string `json:"quantityScale"`    // 数量精度
-	Status           string `json:"status"`           // 状态：online, offline
-	SymbolType       string `json:"symbolType"`      // 交易对类型
-	OffTime          string `json:"offTime"`          // 下线时间
-	LimitOpenTime    string `json:"limitOpenTime"`    // 限价开仓时间
-	DeliveryTime     string `json:"deliveryTime"`     // 交割时间
-	LaunchTime       string `json:"launchTime"`      // 上线时间
-	Volume24h        string `json:"volume24h"`        // 24小时交易量
-	Amount24h        string `json:"amount24h"`        // 24小时交易额
-	OpenPrice        string `json:"openPrice"`        // 开盘价
-	High24h          string `json:"high24h"`          // 24小时最高价
-	Low24h           string `json:"low24h"`          // 24小时最低价
-	LastPrice        string `json:"lastPrice"`        // 最新价
-	PriceChange      string `json:"priceChange"`      // 价格变化
-	PriceChangeRate  string `json:"priceChangeRate"`  // 价格变化率
-	IndexPrice       string `json:"indexPrice"`       // 指数价格
-	MarkPrice        string `json:"markPrice"`        // 标记价格
-	FundingRate      string `json:"fundingRate"`      // 资金费率
-	NextFundingTime  string `json:"nextFundingTime"`  // 下次资金费率时间
-	HoldingAmount    string `json:"holdingAmount"`    // 持仓量
+	Symbol              string   `json:"symbol"`              // 交易对名称，如 BTCUSDT
+	BaseCoin            string   `json:"baseCoin"`            // 基础币种，如 ETHUSDT 中，特指ETH
+	QuoteCoin           string   `json:"quoteCoin"`           // 计价币种，如 ETHUSDT 中，特指USDT
+	BuyLimitPriceRatio  string   `json:"buyLimitPriceRatio"`  // 买限价比例
+	SellLimitPriceRatio string   `json:"sellLimitPriceRatio"` // 卖限价比例
+	FeeRateUpRatio      string   `json:"feeRateUpRatio"`      // 手续费上浮比例
+	MakerFeeRate        string   `json:"makerFeeRate"`        // Maker 手续费率
+	TakerFeeRate        string   `json:"takerFeeRate"`        // Taker 手续费率
+	OpenCostUpRatio     string   `json:"openCostUpRatio"`     // 开仓成本上浮比例
+	SupportMarginCoins  []string `json:"supportMarginCoins"`  // 支持保证金币种
+	MinTradeNum         string   `json:"minTradeNum"`         // 最小开单数量(基础币)
+	PriceEndStep        string   `json:"priceEndStep"`        // 价格步长
+	VolumePlace         string   `json:"volumePlace"`         // 数量精度
+	PricePlace          string   `json:"pricePlace"`          // 价格精度
+	SizeMultiplier      string   `json:"sizeMultiplier"`      // 数量乘数 下单数量要大于 minTradeNum 并且满足 sizeMulti 的倍数
+	SymbolType          string   `json:"symbolType"`          // 合约类型，perpetual永续，delivery交割
+	MinTradeUSDT        string   `json:"minTradeUSDT"`        // 最小交易数量（USDT）
+	MaxSymbolOrderNum   string   `json:"maxSymbolOrderNum"`   // 最大持有订单数（symbol维度）
+	MaxProductOrderNum  string   `json:"maxProductOrderNum"`  // 最大持有订单数（产品类型维度）
+	MaxPositionNum      string   `json:"maxPositionNum"`      // 最大持仓数量
+	SymbolStatus        string   `json:"symbolStatus"`        // 交易对状态，listed 上架，normal 正常/开盘，maintain 禁止交易(禁止开平仓)，limit_open 限制下单(可平仓)，restrictedAPI API限制下单，off 下架
+	OffTime             string   `json:"offTime"`             // 下线时间, '-1'表示正常
+	LimitOpenTime       string   `json:"limitOpenTime"`       // 可开仓时间, '-1' 表示正常; 其它值表示symbol正在/计划维护，指定时间后禁止交易
+	DeliveryTime        string   `json:"deliveryTime"`        // 交割时间
+	DeliveryStartTime   string   `json:"deliveryStartTime"`   // 交割开始时间
+	DeliveryPeriod      string   `json:"deliveryPeriod"`      // 交割周期, this_quarter当季, next_quarter次季
+	LaunchTime          string   `json:"launchTime"`          // 上线时间
+	FundInterval        string   `json:"fundInterval"`        // 资金费率间隔
+	MinLever            string   `json:"minLever"`            // 最小杠杆
+	MaxLever            string   `json:"maxLever"`            // 最大杠杆
+	PosLimit            string   `json:"posLimit"`            // 持仓限制
+	MaintainTime        string   `json:"maintainTime"`        // 维护时间
+	MaxMarketOrderQty   string   `json:"maxMarketOrderQty"`   // 单笔市价单最大下单数量
+	MaxOrderQty         string   `json:"maxOrderQty"`         // 单笔限价单最大下单数量
 }
 
 // Kline K线数据
 type Kline struct {
-	Open      string `json:"open"`      // 开盘价
-	High      string `json:"high"`       // 最高价
-	Low       string `json:"low"`        // 最低价
-	Close     string `json:"close"`      // 收盘价
-	BaseVolume   string `json:"baseVolume"`   // 基础币种交易量
-	QuoteVolume  string `json:"quoteVolume"`  // 计价币种交易量
-	UsdtVolume   string `json:"usdtVolume"`   // USDT 交易量
-	Ts        string `json:"ts"`        // 时间戳（毫秒）
+	Ts          string `json:"ts"`          // 时间戳（毫秒）
+	Open        string `json:"open"`        // 开盘价
+	High        string `json:"high"`        // 最高价
+	Low         string `json:"low"`         // 最低价
+	Close       string `json:"close"`       // 收盘价
+	BaseVolume  string `json:"baseVolume"`  // 交易币成交量
+	QuoteVolume string `json:"quoteVolume"` // 计价币成交量
+}
+
+// KlineArray K线数组格式（原始API响应格式）
+type KlineArray []string
+
+// ParseKlineArray 解析K线数组数据
+func ParseKlineArray(data []string) Kline {
+	if len(data) < 7 {
+		return Kline{}
+	}
+
+	return Kline{
+		Ts:          data[0], // 时间戳
+		Open:        data[1], // 开盘价
+		High:        data[2], // 最高价
+		Low:         data[3], // 最低价
+		Close:       data[4], // 收盘价
+		BaseVolume:  data[5], // 交易币成交量
+		QuoteVolume: data[6], // 计价币成交量
+	}
 }
 
 // Ticker 行情数据
 type Ticker struct {
-	Symbol           string `json:"symbol"`           // 交易对
-	LastPrice        string `json:"lastPr"`           // 最新价
-	BidPrice         string `json:"bidPr"`           // 买一价
-	AskPrice         string `json:"askPr"`           // 卖一价
-	BidSize          string `json:"bidSz"`           // 买一量
-	AskSize          string `json:"askSz"`           // 卖一量
-	OpenPrice        string `json:"openUtc"`          // 开盘价
-	High24h          string `json:"high24h"`         // 24小时最高价
-	Low24h           string `json:"low24h"`          // 24小时最低价
-	BaseVolume24h    string `json:"baseVolume"`      // 24小时基础币种交易量
-	QuoteVolume24h   string `json:"quoteVolume"`     // 24小时计价币种交易量
-	UsdtVolume24h    string `json:"usdtVolume"`      // 24小时USDT交易量
-	Change24h        string `json:"changeUtc24h"`    // 24小时价格变化
-	ChangeRate24h    string `json:"chgUTC"`          // 24小时价格变化率
-	IndexPrice       string `json:"indexPrice"`      // 指数价格
-	MarkPrice        string `json:"markPrice"`        // 标记价格
-	FundingRate      string `json:"fundingRate"`      // 资金费率
-	NextFundingTime  string `json:"nextFundingTime"`  // 下次资金费率时间
-	HoldingAmount    string `json:"holdingAmount"`    // 持仓量
-	Ts               string `json:"ts"`               // 时间戳（毫秒）
-}
-
-// ContractInfo 合约信息
-type ContractInfo struct {
-	Symbol           string `json:"symbol"`           // 交易对
-	BaseCoin         string `json:"baseCoin"`         // 基础币种
-	QuoteCoin        string `json:"quoteCoin"`        // 计价币种
-	MinTradeNum      string `json:"minTradeNum"`      // 最小交易数量
-	MaxTradeNum      string `json:"maxTradeNum"`      // 最大交易数量
-	TakerFeeRate     string `json:"takerFeeRate"`     // Taker 手续费率
-	MakerFeeRate     string `json:"makerFeeRate"`     // Maker 手续费率
-	PriceScale       string `json:"priceScale"`       // 价格精度
-	QuantityScale    string `json:"quantityScale"`    // 数量精度
-	Status           string `json:"status"`           // 状态
-	SymbolType       string `json:"symbolType"`      // 交易对类型
-	OffTime          string `json:"offTime"`          // 下线时间
-	LimitOpenTime    string `json:"limitOpenTime"`    // 限价开仓时间
-	DeliveryTime     string `json:"deliveryTime"`     // 交割时间
-	LaunchTime       string `json:"launchTime"`      // 上线时间
+	Symbol            string `json:"symbol"`            // 币对名称
+	LastPr            string `json:"lastPr"`            // 最新成交价
+	AskPr             string `json:"askPr"`             // 卖一价
+	BidPr             string `json:"bidPr"`             // 买一价
+	BidSz             string `json:"bidSz"`             // 买一量
+	AskSz             string `json:"askSz"`             // 卖一量
+	High24h           string `json:"high24h"`           // 24小时最高价
+	Low24h            string `json:"low24h"`            // 24小时最低价
+	Ts                string `json:"ts"`                // 当前数据时间戳 Unix时间戳的毫秒数格式，如 1597026383085
+	Change24h         string `json:"change24h"`         // 24小时价格涨跌幅
+	BaseVolume        string `json:"baseVolume"`        // 交易币交易量
+	QuoteVolume       string `json:"quoteVolume"`       // 计价币交易量
+	UsdtVolume        string `json:"usdtVolume"`        // USDT交易量
+	OpenUtc           string `json:"openUtc"`           // 开盘价(UTC+0时区)
+	ChangeUtc24h      string `json:"changeUtc24h"`      // 24小时价格涨跌幅(UTC+0时区)
+	IndexPrice        string `json:"indexPrice"`        // 指数价格
+	FundingRate       string `json:"fundingRate"`       // 资金费率
+	HoldingAmount     string `json:"holdingAmount"`     // 当前持仓, 单位是交易币(base coin)数量
+	Open24h           string `json:"open24h"`           // 开盘价 24小时，开盘时间为24小时相对比，即：现在为2号19点，那么开盘时间对应为1号19点。
+	DeliveryStartTime string `json:"deliveryStartTime"` // 交割开始时间
+	DeliveryTime      string `json:"deliveryTime"`      // 交割时间
+	DeliveryStatus    string `json:"deliveryStatus"`    // 交割状态，delivery_config_period: 新上币对配置中，delivery_normal: 交易中，delivery_before: 交割前10分钟，禁止开仓，delivery_period: 交割中，禁止开平仓、撤单
+	MarkPrice         string `json:"markPrice"`         // 标记价格
 }
 
 // KlineRequest K线请求参数
 type KlineRequest struct {
-	Symbol      string `json:"symbol"`      // 交易对，如 BTCUSDT
-	Granularity string `json:"granularity"`  // K线周期
-	StartTime   *int64 `json:"startTime,omitempty"`   // 开始时间（毫秒时间戳）
-	EndTime     *int64 `json:"endTime,omitempty"`     // 结束时间（毫秒时间戳）
-	Limit       int    `json:"limit,omitempty"`       // 返回条数，默认100，最大200
+	Symbol      string `json:"symbol"`              // 交易对，如 BTCUSDT
+	Granularity string `json:"granularity"`         // K线周期
+	StartTime   *int64 `json:"startTime,omitempty"` // 开始时间（毫秒时间戳）
+	EndTime     *int64 `json:"endTime,omitempty"`   // 结束时间（毫秒时间戳）
+	Limit       int    `json:"limit,omitempty"`     // 返回条数，默认100，最大200
 }
 
 // WebSocketMessage WebSocket 消息
@@ -118,12 +127,12 @@ type WebSocketTickerData struct {
 type WebSocketSubscription struct {
 	InstType string   `json:"instType"` // 实例类型：USDT-FUTURES
 	Channel  string   `json:"channel"`  // 频道：ticker
-	InstId   []string `json:"instId"`    // 交易对列表
+	InstId   []string `json:"instId"`   // 交易对列表
 }
 
 // WebSocketRequest WebSocket 请求
 type WebSocketRequest struct {
-	Op   string                 `json:"op"`   // 操作：subscribe, unsubscribe
+	Op   string                  `json:"op"`   // 操作：subscribe, unsubscribe
 	Args []WebSocketSubscription `json:"args"` // 订阅参数
 }
 
