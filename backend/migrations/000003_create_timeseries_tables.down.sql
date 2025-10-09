@@ -1,0 +1,4 @@
+-- 回滚时序表
+DROP TABLE IF EXISTS klines CASCADE;
+DROP TABLE IF EXISTS price_ticks CASCADE;
+

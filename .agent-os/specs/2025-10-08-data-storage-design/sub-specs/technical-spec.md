@@ -4,181 +4,227 @@ This is the technical specification for the spec detailed in @.agent-os/specs/20
 
 ## Technical Requirements
 
-### PostgreSQL表结构
+### 1. PostgreSQL 数据库配置
 
-#### 1. symbols表（交易对配置）
-- `id` (BIGSERIAL PRIMARY KEY): 自增主键
-- `symbol` (VARCHAR(50) UNIQUE NOT NULL): 交易对名称（如BTCUSDT）
-- `base_coin` (VARCHAR(20) NOT NULL): 基础币种
-- `quote_coin` (VARCHAR(20) NOT NULL): 计价币种
-- `contract_type` (VARCHAR(20) NOT NULL): 合约类型（perpetual等）
-- `min_trade_num` (DECIMAL(20,8)): 最小交易数量
-- `price_precision` (INT): 价格精度
-- `volume_precision` (INT): 数量精度
-- `status` (VARCHAR(20) DEFAULT 'active'): 状态（active/inactive）
-- `created_at` (TIMESTAMPTZ DEFAULT NOW()): 创建时间
-- `updated_at` (TIMESTAMPTZ DEFAULT NOW()): 更新时间
-- **索引**: `idx_symbol` (symbol), `idx_status` (status)
+#### 版本要求
+- PostgreSQL 15+ with TimescaleDB 2.13+ 扩展
+- 连接参数：
+  - `max_connections`: 200（支持高并发）
+  - `shared_buffers`: 256MB（内存缓冲）
+  - `effective_cache_size`: 1GB
+  - `work_mem`: 16MB
 
-#### 2. price_ticks表（实时价格数据 - TimescaleDB超表）
-- `time` (TIMESTAMPTZ NOT NULL): 时间戳（分区键）
-- `symbol_id` (BIGINT NOT NULL REFERENCES symbols(id)): 交易对ID
-- `symbol` (VARCHAR(50) NOT NULL): 交易对名称（冗余字段，提升查询性能）
-- `last_price` (DECIMAL(20,8) NOT NULL): 最新价格
-- `bid_price` (DECIMAL(20,8)): 买一价
-- `ask_price` (DECIMAL(20,8)): 卖一价
-- `bid_size` (DECIMAL(20,8)): 买一量
-- `ask_size` (DECIMAL(20,8)): 卖一量
-- `volume_24h` (DECIMAL(30,8)): 24小时成交量
-- `turnover_24h` (DECIMAL(30,8)): 24小时成交额
-- `change_24h` (DECIMAL(10,4)): 24小时涨跌幅（百分比）
-- `high_24h` (DECIMAL(20,8)): 24小时最高价
-- `low_24h` (DECIMAL(20,8)): 24小时最低价
-- **主键**: (time, symbol_id)
-- **索引**: `idx_price_ticks_symbol_time` (symbol_id, time DESC)
-- **TimescaleDB配置**:
-  - 分区间隔: 1天
-  - 压缩策略: 7天后压缩
-  - 数据保留策略: 30天后删除
+#### 字符集和时区
+- 字符集：UTF-8
+- 时区：UTC（所有时间戳统一使用 UTC）
 
-#### 3. klines表（K线数据 - TimescaleDB超表）
-- `time` (TIMESTAMPTZ NOT NULL): K线开始时间（分区键）
-- `symbol_id` (BIGINT NOT NULL REFERENCES symbols(id)): 交易对ID
-- `symbol` (VARCHAR(50) NOT NULL): 交易对名称
-- `interval` (VARCHAR(10) NOT NULL): K线周期（1m/5m/15m/1h/4h/1d）
-- `open` (DECIMAL(20,8) NOT NULL): 开盘价
-- `high` (DECIMAL(20,8) NOT NULL): 最高价
-- `low` (DECIMAL(20,8) NOT NULL): 最低价
-- `close` (DECIMAL(20,8) NOT NULL): 收盘价
-- `base_volume` (DECIMAL(30,8) NOT NULL): 交易币成交量
-- `quote_volume` (DECIMAL(30,8) NOT NULL): 计价币成交量
-- **主键**: (time, symbol_id, interval)
-- **索引**: `idx_klines_symbol_interval_time` (symbol_id, interval, time DESC)
-- **TimescaleDB配置**:
-  - 分区间隔: 7天
-  - 压缩策略: 14天后压缩
-  - 数据保留策略: 30天后删除
+### 2. TimescaleDB 时序优化配置
 
-### Redis缓存设计
+#### 超表配置
+- **分片间隔（Chunk Time Interval）**：7天
+  - `price_ticks` 表：7天分片
+  - `klines` 表：7天分片
+- **分片策略**：按 `timestamp` 字段自动分片
 
-#### 1. 实时价格缓存
-- **键格式**: `price:{symbol}` (例: `price:BTCUSDT`)
-- **数据结构**: Hash
-- **字段**:
-  - `lastPrice`: 最新价格
-  - `bidPrice`: 买一价
-  - `askPrice`: 卖一价
-  - `volume24h`: 24小时成交量
-  - `change24h`: 24小时涨跌幅
-  - `updateTime`: 更新时间戳
-- **过期时间**: 60秒（自动刷新）
+#### 数据压缩策略
+```sql
+-- 7天以上的数据自动压缩
+ALTER TABLE price_ticks SET (
+  timescaledb.compress,
+  timescaledb.compress_segmentby = 'symbol',
+  timescaledb.compress_orderby = 'timestamp DESC'
+);
 
-#### 2. 交易对列表缓存
-- **键格式**: `symbols:active`
-- **数据结构**: Set
-- **内容**: 所有活跃交易对的symbol列表
-- **过期时间**: 300秒（5分钟）
+SELECT add_compression_policy('price_ticks', INTERVAL '7 days');
+```
 
-#### 3. 价格变化率缓存（实时指标计算）
-- **键格式**: `change:{symbol}:{window}` (例: `change:BTCUSDT:1m`)
-- **数据结构**: String（JSON格式）
-- **字段**:
-  - `priceChange`: 价格变化量
-  - `priceChangePercent`: 价格变化率（百分比）
-  - `startPrice`: 窗口起始价格
-  - `endPrice`: 窗口结束价格
-  - `startTime`: 窗口起始时间
-  - `endTime`: 窗口结束时间
-- **支持窗口**: 1m, 5m, 15m, 30m
-- **过期时间**: 根据窗口大小设置（1m→60s, 5m→300s等）
+#### 数据保留策略
+```sql
+-- 自动删除30天以上的数据
+SELECT add_retention_policy('price_ticks', INTERVAL '30 days');
+SELECT add_retention_policy('klines', INTERVAL '30 days');
+```
 
-#### 4. 连接管理
-- **键格式**: `ws:connections`
-- **数据结构**: Hash
-- **用途**: 记录WebSocket活跃连接数和订阅信息
+### 3. Redis 缓存配置
 
-### 数据访问层（DAO）设计
+#### 版本要求
+- Redis 7+
+- 内存限制：512MB（初期）
+- 淘汰策略：`allkeys-lru`（最近最少使用）
 
-#### 1. 数据库连接配置
+#### 持久化配置
+- RDB：每5分钟保存一次（防止重启丢失数据）
+- AOF：关闭（实时数据可从数据库恢复）
+
+#### 缓存键设计规范
+- **命名规则**：`namespace:type:identifier`
+- **TTL 策略**：
+  - 实时价格：60秒
+  - 实时指标：60秒
+  - 交易对列表：300秒（5分钟）
+  - WebSocket 连接：心跳超时时间（90秒）
+
+### 4. 数据访问层（DAO）技术要求
+
+#### ORM 选择
+- 使用 **GORM** v2（Go ORM 库）
+- 优势：成熟稳定、支持批量操作、自动迁移、插件扩展
+
+#### DAO 接口设计原则
+- 每个表对应一个 DAO 接口
+- 支持上下文（Context）传递，便于超时控制和请求追踪
+- 所有数据库错误统一包装为自定义错误类型
+- 返回值使用指针类型，避免大对象拷贝
+
+#### 批量操作优化
+- 批量插入：单次最多1000条
+- 批量查询：使用 `IN` 查询，单次最多100个ID
+- 分页查询：默认每页50条，最大200条
+
+### 5. 读写分离架构
+
+#### 主从配置
+- **主库（Master）**：处理所有写操作（INSERT、UPDATE、DELETE）
+- **从库（Slave）**：处理所有读操作（SELECT）
+- **复制延迟监控**：最大允许延迟5秒
+
+#### GORM 读写分离配置
 ```go
-type DatabaseConfig struct {
-    // 主库（写）
-    MasterDSN string
-    // 从库（读）
-    SlaveDSN  string
-    // 连接池配置
-    MaxOpenConns    int // 最大连接数（默认25）
-    MaxIdleConns    int // 最大空闲连接数（默认5）
-    ConnMaxLifetime time.Duration // 连接最大生命周期（默认5分钟）
-    ConnMaxIdleTime time.Duration // 连接最大空闲时间（默认1分钟）
+import "gorm.io/plugin/dbresolver"
+
+db.Use(dbresolver.Register(dbresolver.Config{
+    Sources:  []gorm.Dialector{postgres.Open(masterDSN)},  // 主库
+    Replicas: []gorm.Dialector{postgres.Open(slaveDSN)},   // 从库
+    Policy:   dbresolver.RandomPolicy{},                    // 随机选择从库
+}))
+```
+
+### 6. 连接池配置
+
+#### PostgreSQL 连接池（GORM）
+```go
+sqlDB, _ := db.DB()
+sqlDB.SetMaxOpenConns(100)          // 最大打开连接数
+sqlDB.SetMaxIdleConns(10)           // 最大空闲连接数
+sqlDB.SetConnMaxLifetime(time.Hour) // 连接最大生命周期
+sqlDB.SetConnMaxIdleTime(10 * time.Minute) // 空闲连接超时
+```
+
+#### Redis 连接池（go-redis）
+```go
+redis.NewClient(&redis.Options{
+    PoolSize:     50,                // 连接池大小
+    MinIdleConns: 10,                // 最小空闲连接
+    MaxRetries:   3,                 // 最大重试次数
+    PoolTimeout:  4 * time.Second,   // 连接池超时
+    IdleTimeout:  5 * time.Minute,   // 空闲连接超时
+})
+```
+
+### 7. 数据一致性保证
+
+#### 写入策略
+- **先写数据库，后写缓存**：确保数据持久化优先
+- **异步批量写入**：实时 Ticker 数据先缓存，每5秒批量写入数据库
+- **事务支持**：关键操作使用数据库事务
+
+#### 缓存更新策略
+- **Cache-Aside 模式**：读取时先查缓存，缓存未命中再查数据库
+- **主动更新**：数据写入数据库后，主动更新 Redis 缓存
+- **缓存穿透保护**：使用布隆过滤器防止查询不存在的数据
+
+### 8. 性能指标要求
+
+#### 数据库性能
+- 单表查询响应时间：< 100ms（90分位）
+- 批量插入性能：> 5000 条/秒
+- 时间范围查询：查询1天K线数据 < 200ms
+
+#### 缓存性能
+- Redis 读写延迟：< 5ms（平均）
+- 缓存命中率：> 95%
+- 并发连接数：支持1000+并发
+
+#### 连接池性能
+- 连接获取时间：< 10ms
+- 连接池利用率：60-80%（避免过度占用）
+
+### 9. 监控和日志
+
+#### 数据库监控指标
+- 慢查询日志：记录超过100ms的查询
+- 连接池状态：打开连接数、空闲连接数
+- 数据库大小：每日统计表空间占用
+
+#### 缓存监控指标
+- 内存使用率
+- 缓存命中率
+- 键空间统计
+
+#### 日志记录
+- 所有 DAO 操作记录结构化日志（使用 Zap）
+- 包含：操作类型、表名、耗时、影响行数、错误信息
+- 慢查询单独记录 WARN 级别日志
+
+### 10. 错误处理
+
+#### 自定义错误类型
+```go
+type DBError struct {
+    Op        string    // 操作类型（SELECT、INSERT等）
+    Table     string    // 表名
+    Err       error     // 原始错误
+    Timestamp time.Time // 错误时间
 }
 ```
 
-#### 2. DAO接口定义
+#### 错误分类
+- **网络错误**：连接超时、连接被拒绝 → 自动重试
+- **数据错误**：唯一键冲突、外键约束 → 返回业务错误
+- **系统错误**：磁盘满、内存不足 → 告警并降级
 
-**SymbolDAO**:
-- `CreateSymbol(symbol *Symbol) error`: 创建交易对
-- `GetSymbolByName(name string) (*Symbol, error)`: 根据名称查询
-- `GetSymbolByID(id int64) (*Symbol, error)`: 根据ID查询
-- `ListActiveSymbols() ([]*Symbol, error)`: 获取所有活跃交易对
-- `UpdateSymbol(symbol *Symbol) error`: 更新交易对信息
-- `BatchCreateSymbols(symbols []*Symbol) error`: 批量创建
+### 11. 数据迁移和版本管理
 
-**PriceTickDAO**:
-- `InsertTick(tick *PriceTick) error`: 插入单条价格记录
-- `BatchInsertTicks(ticks []*PriceTick) error`: 批量插入（优化性能）
-- `GetLatestTick(symbolID int64) (*PriceTick, error)`: 获取最新价格
-- `GetTicksByTimeRange(symbolID int64, start, end time.Time) ([]*PriceTick, error)`: 按时间范围查询
-- `GetTicksWithPagination(symbolID int64, limit, offset int) ([]*PriceTick, error)`: 分页查询
+#### 迁移工具
+- 使用 **golang-migrate** 管理数据库迁移
+- 迁移文件命名：`YYYYMMDDHHMMSS_description.up.sql` / `.down.sql`
+- 支持向上迁移和回滚
 
-**KlineDAO**:
-- `InsertKline(kline *Kline) error`: 插入单条K线
-- `BatchInsertKlines(klines []*Kline) error`: 批量插入
-- `GetKlines(symbolID int64, interval string, start, end time.Time) ([]*Kline, error)`: 查询K线数据
-- `GetLatestKline(symbolID int64, interval string) (*Kline, error)`: 获取最新K线
-
-#### 3. 缓存层接口（RedisDAO）
-
-**RedisPriceCache**:
-- `SetPrice(symbol string, price *PriceData) error`: 设置实时价格
-- `GetPrice(symbol string) (*PriceData, error)`: 获取实时价格
-- `BatchSetPrices(prices map[string]*PriceData) error`: 批量设置
-- `SetPriceChange(symbol, window string, change *PriceChange) error`: 设置价格变化率
-- `GetPriceChange(symbol, window string) (*PriceChange, error)`: 获取价格变化率
-- `SetActiveSymbols(symbols []string) error`: 设置活跃交易对列表
-- `GetActiveSymbols() ([]string, error)`: 获取活跃交易对列表
-- `ClearCache(pattern string) error`: 清空缓存
-
-### 性能要求
-
-- **写入性能**: 支持每秒500+条price_tick记录写入
-- **查询性能**: 
-  - Redis查询: < 10ms
-  - PostgreSQL单表查询: < 50ms
-  - PostgreSQL JOIN查询: < 100ms
-- **连接池**: 主库25连接，从库50连接（读多写少）
-- **批量操作**: 优先使用批量插入（100条/批次）减少数据库往返
-
-### 事务管理
-
-- 交易对创建需要事务保证
-- 价格数据写入无需事务（允许部分失败）
-- 使用`database/sql`包的`Begin()`, `Commit()`, `Rollback()`
-- 读写分离：写操作使用master，读操作使用slave
-
-### 错误处理
-
-- 数据库连接错误: 自动重试3次，间隔1秒
-- 主键冲突: 返回明确的错误信息
-- 外键约束违反: 返回业务错误
-- 超时错误: 设置合理的查询超时（5秒）
+#### 版本控制
+- 数据库表版本通过迁移文件管理
+- 每次表结构变更必须创建新的迁移文件
+- 生产环境迁移需要审批和备份
 
 ## External Dependencies
 
-无需新增外部依赖。使用已有的技术栈：
+### 新增依赖包
 
-- **database/sql** (Go标准库): 数据库连接
-- **github.com/lib/pq**: PostgreSQL驱动
-- **github.com/go-redis/redis/v8**: Redis客户端
-- **TimescaleDB**: PostgreSQL扩展（已在tech-stack中确定）
+1. **gorm.io/gorm** - Go ORM 库
+   - **版本**：v1.25.5
+   - **用途**：数据库操作封装、模型定义、迁移管理
+   - **Justification**：成熟稳定的 ORM 库，支持 PostgreSQL 和读写分离，简化数据库操作代码
 
+2. **gorm.io/driver/postgres** - GORM PostgreSQL 驱动
+   - **版本**：v1.5.4
+   - **用途**：GORM 的 PostgreSQL 适配器
+   - **Justification**：GORM 官方支持的 PostgreSQL 驱动
+
+3. **gorm.io/plugin/dbresolver** - GORM 读写分离插件
+   - **版本**：v1.4.7
+   - **用途**：实现主从读写分离
+   - **Justification**：GORM 官方插件，配置简单，支持多从库负载均衡
+
+4. **github.com/redis/go-redis/v9** - Redis 客户端
+   - **版本**：v9.3.0
+   - **用途**：Redis 连接、缓存操作、连接池管理
+   - **Justification**：Go 社区最流行的 Redis 客户端，支持 Redis 7+ 新特性
+
+5. **github.com/golang-migrate/migrate/v4** - 数据库迁移工具
+   - **版本**：v4.16.2
+   - **用途**：数据库版本管理和迁移
+   - **Justification**：支持多种数据库，提供 CLI 和 Go API，生产环境广泛使用
+
+6. **github.com/lib/pq** - PostgreSQL 底层驱动（GORM 依赖）
+   - **版本**：v1.10.9
+   - **用途**：PostgreSQL 连接底层实现
+   - **Justification**：Pure Go 实现，无需 CGO，稳定可靠

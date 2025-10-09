@@ -6,152 +6,192 @@
 
 ---
 
-- [ ] 1. 数据库迁移脚本开发
-  - [ ] 1.1 创建数据库迁移目录结构（backend/migrations/）
-  - [ ] 1.2 编写 001_create_symbols_table.sql 迁移脚本
-  - [ ] 1.3 编写 002_create_price_ticks_table.sql 迁移脚本
-  - [ ] 1.4 编写 003_create_klines_table.sql 迁移脚本
-  - [ ] 1.5 编写 004_create_indexes.sql 迁移脚本
-  - [ ] 1.6 编写 005_configure_timescaledb_policies.sql 迁移脚本
-  - [ ] 1.7 编写对应的回滚脚本（rollback_001.sql 至 rollback_005.sql）
-  - [ ] 1.8 验证所有迁移脚本的SQL语法正确性
+- [x] 1. PostgreSQL 数据库和 TimescaleDB 配置 ✅ **已完成**
+  - [x] 1.1 配置 Docker Compose 添加 PostgreSQL 15+ 和 TimescaleDB 扩展
+  - [x] 1.2 配置数据库连接参数（max_connections、shared_buffers 等）
+  - [x] 1.3 创建数据库迁移工具配置（golang-migrate）
+  - [x] 1.4 编写第一个迁移文件：启用 TimescaleDB 扩展
+  - [x] 1.5 验证 TimescaleDB 扩展安装成功
+  - [x] 1.6 配置数据库连接字符串和环境变量
 
-- [ ] 2. 数据库迁移工具集成
-  - [ ] 2.1 安装 golang-migrate/migrate 包
-  - [ ] 2.2 创建数据库配置文件（database.yaml）
-  - [ ] 2.3 编写迁移工具初始化代码（internal/db/migrate.go）
-  - [ ] 2.4 实现 migrate up 命令（执行所有待执行迁移）
-  - [ ] 2.5 实现 migrate down 命令（回滚迁移）
-  - [ ] 2.6 实现 migrate version 命令（查看当前版本）
-  - [ ] 2.7 编写迁移工具的单元测试
-  - [ ] 2.8 验证迁移工具能够成功执行所有迁移脚本
+- [x] 2. 数据库表结构创建 ✅ **已完成**
+  - [x] 2.1 编写迁移文件：创建 symbols 表（包含所有 BitGet Symbol 字段）
+  - [x] 2.2 编写迁移文件：创建 price_ticks 时序表
+  - [x] 2.3 编写迁移文件：创建 klines 时序表
+  - [x] 2.4 配置 price_ticks 为 TimescaleDB 超表（7天分片）
+  - [x] 2.5 配置 klines 为 TimescaleDB 超表（7天分片）
+  - [x] 2.6 创建必要的索引（symbols.is_active, price_ticks, klines）
+  - [x] 2.7 执行数据库迁移，验证表创建成功
+  - [x] 2.8 验证超表配置正确（查询 timescaledb_information.hypertables）
 
-- [ ] 3. 数据模型（Models）定义
-  - [ ] 3.1 创建 internal/models 目录
-  - [ ] 3.2 定义 Symbol 结构体（对应 symbols 表）
-  - [ ] 3.3 定义 PriceTick 结构体（对应 price_ticks 表）
-  - [ ] 3.4 定义 Kline 结构体（对应 klines 表）
-  - [ ] 3.5 添加模型验证方法（Validate）
-  - [ ] 3.6 添加模型转换方法（ToJSON/FromJSON）
-  - [ ] 3.7 编写模型单元测试
-  - [ ] 3.8 验证所有模型字段与数据库表字段一致
+- [x] 3. TimescaleDB 数据压缩和保留策略 ✅ **已完成**
+  - [x] 3.1 编写迁移文件：配置 price_ticks 表压缩策略（7天后压缩）
+  - [x] 3.2 编写迁移文件：配置 klines 表压缩策略（7天后压缩）
+  - [x] 3.3 配置 price_ticks 表数据保留策略（30天自动删除）
+  - [x] 3.4 配置 klines 表数据保留策略（30天自动删除）
+  - [x] 3.5 验证压缩策略配置成功（查询 timescaledb_information.jobs）
+  - [x] 3.6 验证保留策略配置成功（查询 timescaledb_information.jobs）
+  - [x] 3.7 编写测试数据生成脚本（生成7天以上的测试数据）
+  - [x] 3.8 验证压缩策略执行（手动触发或等待自动执行）
 
-- [ ] 4. 数据库连接管理
-  - [ ] 4.1 创建 internal/db 目录
-  - [ ] 4.2 实现 DatabaseConfig 配置结构
-  - [ ] 4.3 实现数据库连接初始化函数（NewDatabase）
-  - [ ] 4.4 实现连接池配置（MaxOpenConns、MaxIdleConns等）
-  - [ ] 4.5 实现读写分离支持（Master/Slave连接）
-  - [ ] 4.6 实现数据库健康检查（Ping）
-  - [ ] 4.7 实现优雅关闭（Close）
-  - [ ] 4.8 编写数据库连接测试，验证连接池和读写分离工作正常
+- [x] 4. GORM 数据访问层（DAO）基础架构 ✅ **已完成**
+  - [x] 4.1 安装依赖包（gorm.io/gorm, gorm.io/driver/postgres）
+  - [x] 4.2 创建数据库连接管理模块（internal/database/connection.go）
+  - [x] 4.3 配置 GORM 连接池（最大连接数、空闲连接数、连接超时）
+  - [x] 4.4 定义 Symbol、PriceTick、Kline 数据模型（internal/models/）
+  - [x] 4.5 实现自定义数据库错误类型（internal/database/errors.go）
+  - [x] 4.6 实现数据库健康检查函数
+  - [x] 4.7 编写数据库连接测试（测试连接、连接池、健康检查）
+  - [x] 4.8 验证所有测试通过
 
 - [ ] 5. SymbolDAO 实现
-  - [ ] 5.1 创建 internal/dao/symbol_dao.go
-  - [ ] 5.2 定义 SymbolDAO 接口
-  - [ ] 5.3 实现 CreateSymbol 方法
-  - [ ] 5.4 实现 GetSymbolByName 方法
-  - [ ] 5.5 实现 GetSymbolByID 方法
-  - [ ] 5.6 实现 ListActiveSymbols 方法
-  - [ ] 5.7 实现 UpdateSymbol 方法
-  - [ ] 5.8 实现 BatchCreateSymbols 方法
-  - [ ] 5.9 编写 SymbolDAO 单元测试（使用 testify/suite）
-  - [ ] 5.10 验证所有 SymbolDAO 方法通过测试
+  - [ ] 5.1 编写 SymbolDAO 单元测试（使用 testify 和内存数据库）
+  - [ ] 5.2 实现 SymbolDAO 接口定义（Create, GetBySymbol, List, Update, Delete）
+  - [ ] 5.3 实现 Create 方法（插入单个交易对，处理唯一约束冲突）
+  - [ ] 5.4 实现 CreateBatch 方法（批量插入，单次最多1000条）
+  - [ ] 5.5 实现 GetBySymbol 方法（根据 symbol 精确查询）
+  - [ ] 5.6 实现 List 方法（查询所有交易对，支持 is_active 过滤）
+  - [ ] 5.7 实现 Update 方法（更新交易对信息）
+  - [ ] 5.8 实现 Upsert 方法（存在则更新，不存在则插入）
+  - [ ] 5.9 验证所有单元测试通过
+  - [ ] 5.10 编写集成测试（真实数据库）并验证通过
 
-- [ ] 6. PriceTickDAO 实现
-  - [ ] 6.1 创建 internal/dao/price_tick_dao.go
-  - [ ] 6.2 定义 PriceTickDAO 接口
-  - [ ] 6.3 实现 InsertTick 方法
-  - [ ] 6.4 实现 BatchInsertTicks 方法（批量插入优化）
-  - [ ] 6.5 实现 GetLatestTick 方法
-  - [ ] 6.6 实现 GetTicksByTimeRange 方法
-  - [ ] 6.7 实现 GetTicksWithPagination 方法
-  - [ ] 6.8 编写 PriceTickDAO 单元测试
-  - [ ] 6.9 性能测试：验证批量插入性能达到 500+ 条/秒
-  - [ ] 6.10 验证所有 PriceTickDAO 方法通过测试
+- [ ] 6. KlineDAO 实现
+  - [ ] 6.1 编写 KlineDAO 单元测试
+  - [ ] 6.2 实现 KlineDAO 接口定义（Create, CreateBatch, GetByRange, GetLatest）
+  - [ ] 6.3 实现 Create 方法（插入单条K线，处理唯一约束冲突）
+  - [ ] 6.4 实现 CreateBatch 方法（批量插入，使用 ON CONFLICT DO NOTHING）
+  - [ ] 6.5 实现 GetByRange 方法（时间范围查询，支持分页）
+  - [ ] 6.6 实现 GetLatest 方法（查询最新N条K线）
+  - [ ] 6.7 实现 GetBySymbolAndGranularity 方法（按交易对和周期查询）
+  - [ ] 6.8 实现查询性能优化（确保使用索引，EXPLAIN ANALYZE）
+  - [ ] 6.9 验证所有单元测试通过
+  - [ ] 6.10 编写集成测试并验证通过
 
-- [ ] 7. KlineDAO 实现
-  - [ ] 7.1 创建 internal/dao/kline_dao.go
-  - [ ] 7.2 定义 KlineDAO 接口
-  - [ ] 7.3 实现 InsertKline 方法
-  - [ ] 7.4 实现 BatchInsertKlines 方法
-  - [ ] 7.5 实现 GetKlines 方法（按时间范围查询）
-  - [ ] 7.6 实现 GetLatestKline 方法
-  - [ ] 7.7 编写 KlineDAO 单元测试
-  - [ ] 7.8 性能测试：验证查询24小时K线数据耗时 < 100ms
-  - [ ] 7.9 验证所有 KlineDAO 方法通过测试
+- [ ] 7. TickerDAO 实现
+  - [ ] 7.1 编写 TickerDAO 单元测试
+  - [ ] 7.2 实现 TickerDAO 接口定义（Create, CreateBatch, GetByRange, GetLatest）
+  - [ ] 7.3 实现 Create 方法（插入单条 Ticker 数据）
+  - [ ] 7.4 实现 CreateBatch 方法（批量插入，优化写入性能）
+  - [ ] 7.5 实现 GetLatest 方法（查询指定交易对的最新 Ticker）
+  - [ ] 7.6 实现 GetByRange 方法（时间范围查询）
+  - [ ] 7.7 实现 GetLatestMultiple 方法（批量查询多个交易对的最新价格）
+  - [ ] 7.8 验证所有单元测试通过
+  - [ ] 7.9 编写集成测试并验证通过
 
-- [ ] 8. Redis 缓存层实现
-  - [ ] 8.1 创建 internal/cache 目录
-  - [ ] 8.2 实现 RedisConfig 配置结构
-  - [ ] 8.3 实现 Redis 连接初始化（NewRedisClient）
-  - [ ] 8.4 定义 PriceData 和 PriceChange 数据结构
-  - [ ] 8.5 实现 RedisPriceCache 接口
-  - [ ] 8.6 实现 SetPrice 和 GetPrice 方法
-  - [ ] 8.7 实现 BatchSetPrices 方法
-  - [ ] 8.8 实现 SetPriceChange 和 GetPriceChange 方法
-  - [ ] 8.9 实现 SetActiveSymbols 和 GetActiveSymbols 方法
-  - [ ] 8.10 实现 ClearCache 方法
-  - [ ] 8.11 编写 Redis 缓存层单元测试（使用 miniredis 模拟）
-  - [ ] 8.12 性能测试：验证 Redis 查询响应时间 < 10ms
-  - [ ] 8.13 验证所有 Redis 缓存方法通过测试
+- [ ] 8. Redis 缓存基础架构
+  - [ ] 8.1 配置 Docker Compose 添加 Redis 7+（设置内存限制、淘汰策略）
+  - [ ] 8.2 安装 go-redis 依赖包（github.com/redis/go-redis/v9）
+  - [ ] 8.3 创建 Redis 连接管理模块（internal/cache/connection.go）
+  - [ ] 8.4 配置 Redis 连接池（PoolSize、MinIdleConns、超时参数）
+  - [ ] 8.5 定义缓存键命名规范（constants.go：CacheKeyPrice 等）
+  - [ ] 8.6 实现 Redis 健康检查函数
+  - [ ] 8.7 编写 Redis 连接测试
+  - [ ] 8.8 验证所有测试通过
 
-- [ ] 9. 集成测试和性能验证
-  - [ ] 9.1 创建 internal/dao/integration_test.go
-  - [ ] 9.2 编写 SymbolDAO 集成测试（真实数据库）
-  - [ ] 9.3 编写 PriceTickDAO 集成测试
-  - [ ] 9.4 编写 KlineDAO 集成测试
-  - [ ] 9.5 编写 Redis 缓存集成测试
-  - [ ] 9.6 编写批量插入性能测试（500+ 条/秒）
-  - [ ] 9.7 编写查询性能测试（PostgreSQL < 100ms）
-  - [ ] 9.8 编写 Redis 性能测试（< 10ms）
-  - [ ] 9.9 验证 TimescaleDB 超表创建成功
-  - [ ] 9.10 验证数据压缩和保留策略配置生效
-  - [ ] 9.11 验证所有集成测试通过
+- [ ] 9. Redis 缓存操作实现
+  - [ ] 9.1 编写 PriceCache 单元测试（使用 miniredis 模拟）
+  - [ ] 9.2 实现 PriceCache 接口（Set, Get, GetMultiple, Delete）
+  - [ ] 9.3 实现 SetPrice 方法（缓存实时价格，Hash 结构，TTL 60秒）
+  - [ ] 9.4 实现 GetPrice 方法（获取单个交易对价格）
+  - [ ] 9.5 实现 GetMultiplePrices 方法（批量获取价格，使用 Pipeline）
+  - [ ] 9.6 实现 SetMetrics 方法（缓存实时指标）
+  - [ ] 9.7 实现 GetMetrics 方法（获取实时指标）
+  - [ ] 9.8 实现 SetActiveSymbols 方法（缓存活跃交易对列表，Set 结构）
+  - [ ] 9.9 实现 GetActiveSymbols 方法（获取活跃交易对列表）
+  - [ ] 9.10 验证所有单元测试通过
+  - [ ] 9.11 编写集成测试（真实 Redis）并验证通过
 
-- [ ] 10. 数据初始化和文档完善
-  - [ ] 10.1 创建 seed_symbols.sql 初始化脚本
-  - [ ] 10.2 从 BitGet API 获取真实交易对列表
-  - [ ] 10.3 批量导入交易对数据到数据库
-  - [ ] 10.4 验证交易对数据导入成功（至少 50+ 交易对）
-  - [ ] 10.5 编写数据库操作文档（README_DATABASE.md）
-  - [ ] 10.6 编写 DAO 使用示例代码
-  - [ ] 10.7 编写性能优化建议文档
-  - [ ] 10.8 更新项目主 README，添加数据库设置说明
-  - [ ] 10.9 验证所有交付成果（5 个预期交付项）
+- [ ] 10. 读写分离配置（可选，开发环境暂不实现）
+  - [ ] 10.1 安装 GORM dbresolver 插件（gorm.io/plugin/dbresolver）
+  - [ ] 10.2 配置主库连接（写操作）
+  - [ ] 10.3 配置从库连接（读操作）
+  - [ ] 10.4 实现读写分离策略（随机选择从库）
+  - [ ] 10.5 配置复制延迟监控
+  - [ ] 10.6 编写读写分离测试（验证写操作到主库，读操作到从库）
+  - [ ] 10.7 验证所有测试通过
+
+- [ ] 11. 性能测试和优化
+  - [ ] 11.1 编写批量插入性能测试（price_ticks 表，目标 > 5000条/秒）
+  - [ ] 11.2 编写时间范围查询性能测试（查询1天K线，目标 < 200ms）
+  - [ ] 11.3 编写 Redis 缓存性能测试（读写延迟，目标 < 5ms）
+  - [ ] 11.4 编写并发查询测试（100+ 并发，验证连接池稳定）
+  - [ ] 11.5 使用 EXPLAIN ANALYZE 分析慢查询
+  - [ ] 11.6 优化索引策略（如有必要）
+  - [ ] 11.7 验证所有性能指标达标
+  - [ ] 11.8 生成性能测试报告
+
+- [ ] 12. 监控和日志集成
+  - [ ] 12.1 在所有 DAO 方法中添加结构化日志（使用 Zap）
+  - [ ] 12.2 记录慢查询日志（超过 100ms 的查询）
+  - [ ] 12.3 实现数据库连接池监控（定期记录连接状态）
+  - [ ] 12.4 实现 Redis 内存监控（记录内存使用率）
+  - [ ] 12.5 实现缓存命中率统计
+  - [ ] 12.6 配置日志级别（开发环境 Debug，生产环境 Info）
+  - [ ] 12.7 验证日志输出格式和内容
+  - [ ] 12.8 验证监控指标正确记录
+
+- [ ] 13. 数据一致性和错误处理
+  - [ ] 13.1 实现数据库事务封装函数（WithTransaction）
+  - [ ] 13.2 实现缓存更新策略（先写数据库，后写缓存）
+  - [ ] 13.3 实现缓存穿透保护（布隆过滤器或空值缓存）
+  - [ ] 13.4 实现重试机制（网络错误自动重试）
+  - [ ] 13.5 编写错误处理测试（数据库连接失败、Redis 连接失败等）
+  - [ ] 13.6 编写事务测试（验证 ACID 特性）
+  - [ ] 13.7 编写缓存一致性测试
+  - [ ] 13.8 验证所有测试通过
+
+- [ ] 14. 集成测试和验证
+  - [ ] 14.1 编写端到端测试：保存交易对 → 查询 → 验证数据一致
+  - [ ] 14.2 编写端到端测试：批量保存K线 → 时间范围查询 → 验证数据
+  - [ ] 14.3 编写端到端测试：保存 Ticker → 缓存 → 查询缓存 → 验证一致性
+  - [ ] 14.4 验证 TimescaleDB 压缩策略（插入7天前数据，手动触发压缩）
+  - [ ] 14.5 验证数据保留策略（插入30天前数据，验证自动删除）
+  - [ ] 14.6 验证连接池在高并发下的稳定性（1000+ 并发请求）
+  - [ ] 14.7 验证 Redis 缓存 TTL 正确过期
+  - [ ] 14.8 生成测试覆盖率报告（目标 > 80%）
+  - [ ] 14.9 验证所有 Expected Deliverable 达成
+
+- [ ] 15. 文档和示例代码
+  - [ ] 15.1 编写数据库迁移使用文档（migrate up/down 命令）
+  - [ ] 15.2 编写 DAO 使用示例代码
+  - [ ] 15.3 编写 Redis 缓存使用示例代码
+  - [ ] 15.4 更新 README.md（数据库配置、迁移步骤）
+  - [ ] 15.5 生成 ER 图（数据库表关系图）
+  - [ ] 15.6 编写性能优化建议文档
+  - [ ] 15.7 编写故障排查指南
+  - [ ] 15.8 验证文档完整性和准确性
 
 ---
 
 ## 任务说明
 
-**任务总数：** 10 个主要任务，共 88 个子任务
+**任务总数：** 15 个主要任务，共 156 个子任务
 
 **预计工作量：** S（2-3 天）
 
 **依赖关系：**
-- 任务 1（迁移脚本）是基础，必须先完成
-- 任务 2（迁移工具）依赖任务 1
-- 任务 3（数据模型）可以与任务 1-2 并行开发
-- 任务 4（连接管理）是 DAO 层的基础
-- 任务 5-7（DAO 实现）依赖任务 3 和 4
-- 任务 8（Redis 缓存）可以与任务 5-7 并行开发
-- 任务 9（集成测试）在所有 DAO 完成后进行
-- 任务 10（数据初始化）在测试通过后进行
+- 任务 1-3 是数据库基础，必须先完成
+- 任务 4 是 DAO 基础架构，依赖任务 1-3
+- 任务 5-7（各个 DAO 实现）依赖任务 4，可以并行开发
+- 任务 8-9（Redis 缓存）可以与任务 5-7 并行开发
+- 任务 10（读写分离）是可选任务，开发环境可暂不实现
+- 任务 11-13（性能测试、监控、错误处理）依赖任务 5-9
+- 任务 14（集成测试）依赖所有功能完成
+- 任务 15（文档）贯穿整个开发过程
 
 **技术栈：**
-- PostgreSQL 15+ with TimescaleDB
-- Redis 7+
-- golang-migrate/migrate
-- database/sql + github.com/lib/pq
-- github.com/go-redis/redis/v8
-- testify/suite（测试框架）
-- miniredis（Redis 模拟）
+- PostgreSQL 15+ with TimescaleDB 2.13+
+- GORM v1.25.5
+- go-redis v9.3.0
+- golang-migrate v4.16.2
+- testify (测试框架)
+- miniredis (Redis 模拟)
 
 **验证标准：**
 按照规范中的 "Expected Deliverable" 部分，所有 5 项交付成果必须能够成功验证：
-1. SQL 迁移脚本成功创建所有表和 TimescaleDB 配置
-2. DAO 接口支持高性能数据操作（500+ 条/秒写入）
-3. Redis 缓存响应时间 < 10ms
-4. 数据库查询性能满足要求（< 100ms）
-5. 数据保留策略正常工作（30 天自动压缩和清理）
-
+1. PostgreSQL 数据库创建成功，包含3个表和 TimescaleDB 配置
+2. DAO 接口可以正常读写数据，数据一致性验证通过
+3. TimescaleDB 压缩和保留策略验证生效
+4. Redis 缓存读写正常，TTL 过期策略工作正常
+5. 读写分离配置生效，连接池在高并发下稳定（开发环境可选）
