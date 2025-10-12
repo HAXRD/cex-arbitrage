@@ -56,17 +56,17 @@
   - [x] 5.9 验证所有单元测试通过
   - [x] 5.10 编写集成测试（真实数据库）并验证通过
 
-- [ ] 6. KlineDAO 实现
-  - [ ] 6.1 编写 KlineDAO 单元测试
-  - [ ] 6.2 实现 KlineDAO 接口定义（Create, CreateBatch, GetByRange, GetLatest）
-  - [ ] 6.3 实现 Create 方法（插入单条K线，处理唯一约束冲突）
-  - [ ] 6.4 实现 CreateBatch 方法（批量插入，使用 ON CONFLICT DO NOTHING）
-  - [ ] 6.5 实现 GetByRange 方法（时间范围查询，支持分页）
-  - [ ] 6.6 实现 GetLatest 方法（查询最新N条K线）
-  - [ ] 6.7 实现 GetBySymbolAndGranularity 方法（按交易对和周期查询）
-  - [ ] 6.8 实现查询性能优化（确保使用索引，EXPLAIN ANALYZE）
-  - [ ] 6.9 验证所有单元测试通过
-  - [ ] 6.10 编写集成测试并验证通过
+- [x] 6. KlineDAO 实现 ✅ **已完成**
+  - [x] 6.1 编写 KlineDAO 单元测试
+  - [x] 6.2 实现 KlineDAO 接口定义（Create, CreateBatch, GetByRange, GetLatest）
+  - [x] 6.3 实现 Create 方法（插入单条K线，处理唯一约束冲突）
+  - [x] 6.4 实现 CreateBatch 方法（批量插入，使用 ON CONFLICT DO NOTHING）
+  - [x] 6.5 实现 GetByRange 方法（时间范围查询，支持分页）
+  - [x] 6.6 实现 GetLatest 方法（查询最新N条K线）
+  - [x] 6.7 实现 GetBySymbolAndGranularity 方法（按交易对和周期查询）
+  - [x] 6.8 实现查询性能优化（确保使用索引，EXPLAIN ANALYZE）
+  - [x] 6.9 验证所有单元测试通过
+  - [x] 6.10 编写集成测试并验证通过
 
 - [ ] 7. TickerDAO 实现
   - [ ] 7.1 编写 TickerDAO 单元测试
