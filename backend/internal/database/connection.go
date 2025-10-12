@@ -156,6 +156,86 @@ func WithTransaction(fn func(tx *gorm.DB) error) error {
 	return DB.Transaction(fn)
 }
 
+// WithTransactionWithRetry 在事务中执行函数，支持重试机制
+func WithTransactionWithRetry(fn func(tx *gorm.DB) error, maxRetries int, retryDelay time.Duration) error {
+	if DB == nil {
+		return fmt.Errorf("database not connected")
+	}
+
+	var lastErr error
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		err := DB.Transaction(fn)
+		if err == nil {
+			return nil
+		}
+
+		lastErr = err
+		
+		// 检查是否可重试
+		if !IsRetryable(err) || attempt == maxRetries {
+			break
+		}
+
+		// 等待后重试
+		time.Sleep(retryDelay * time.Duration(attempt+1))
+	}
+
+	return fmt.Errorf("transaction failed after %d attempts: %w", maxRetries+1, lastErr)
+}
+
+// WithTransactionWithContext 在事务中执行函数，支持上下文和超时
+func WithTransactionWithContext(ctx context.Context, fn func(tx *gorm.DB) error) error {
+	if DB == nil {
+		return fmt.Errorf("database not connected")
+	}
+
+	// 创建带超时的上下文
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	// 使用 GORM 的事务方法
+	return DB.WithContext(ctx).Transaction(fn)
+}
+
+// WithTransactionWithLogging 在事务中执行函数，带详细日志记录
+func WithTransactionWithLogging(ctx context.Context, operation string, fn func(tx *gorm.DB) error, log *zap.Logger) error {
+	if DB == nil {
+		return fmt.Errorf("database not connected")
+	}
+
+	if log == nil {
+		log = zap.NewNop()
+	}
+
+	start := time.Now()
+	log.Info("Starting transaction",
+		zap.String("operation", operation),
+		zap.Time("start_time", start),
+	)
+
+	err := DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(tx)
+	})
+
+	duration := time.Since(start)
+	
+	if err != nil {
+		log.Error("Transaction failed",
+			zap.String("operation", operation),
+			zap.Duration("duration", duration),
+			zap.Error(err),
+		)
+		return fmt.Errorf("transaction %s failed: %w", operation, err)
+	}
+
+	log.Info("Transaction completed successfully",
+		zap.String("operation", operation),
+		zap.Duration("duration", duration),
+	)
+
+	return nil
+}
+
 // gormLoggerAdapter 适配 zap logger 到 GORM logger
 type gormLoggerAdapter struct {
 	logger *zap.Logger
