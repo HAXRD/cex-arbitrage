@@ -79,15 +79,15 @@
   - [x] 7.8 验证所有单元测试通过
   - [x] 7.9 编写集成测试并验证通过
 
-- [ ] 8. Redis 缓存基础架构
-  - [ ] 8.1 配置 Docker Compose 添加 Redis 7+（设置内存限制、淘汰策略）
-  - [ ] 8.2 安装 go-redis 依赖包（github.com/redis/go-redis/v9）
-  - [ ] 8.3 创建 Redis 连接管理模块（internal/cache/connection.go）
-  - [ ] 8.4 配置 Redis 连接池（PoolSize、MinIdleConns、超时参数）
-  - [ ] 8.5 定义缓存键命名规范（constants.go：CacheKeyPrice 等）
-  - [ ] 8.6 实现 Redis 健康检查函数
-  - [ ] 8.7 编写 Redis 连接测试
-  - [ ] 8.8 验证所有测试通过
+- [x] 8. Redis 缓存基础架构 ✅ **已完成**
+  - [x] 8.1 配置 Docker Compose 添加 Redis 7+（设置内存限制、淘汰策略）
+  - [x] 8.2 安装 go-redis 依赖包（github.com/redis/go-redis/v9）
+  - [x] 8.3 创建 Redis 连接管理模块（internal/cache/connection.go）
+  - [x] 8.4 配置 Redis 连接池（PoolSize、MinIdleConns、超时参数）
+  - [x] 8.5 定义缓存键命名规范（constants.go：CacheKeyPrice 等）
+  - [x] 8.6 实现 Redis 健康检查函数
+  - [x] 8.7 编写 Redis 连接测试
+  - [x] 8.8 验证所有测试通过
 
 - [ ] 9. Redis 缓存操作实现
   - [ ] 9.1 编写 PriceCache 单元测试（使用 miniredis 模拟）
