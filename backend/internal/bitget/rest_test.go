@@ -3,6 +3,7 @@ package bitget
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -219,9 +220,13 @@ func TestGetContractSymbols_APIError(t *testing.T) {
 	}
 
 	// 验证错误类型
-	bitgetErr, ok := err.(*BitgetError)
-	if !ok {
-		t.Fatalf("期望 BitgetError 类型，实际 %T", err)
+	t.Logf("实际错误: %v", err)
+	t.Logf("错误类型: %T", err)
+
+	// 使用 errors.As 检查被包装的 BitgetError
+	var bitgetErr *BitgetError
+	if !errors.As(err, &bitgetErr) {
+		t.Fatalf("期望包含 BitgetError，实际 %T", err)
 	}
 
 	if bitgetErr.Code != "40001" {
