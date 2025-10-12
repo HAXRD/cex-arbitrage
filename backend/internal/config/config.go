@@ -24,16 +24,27 @@ type ServerConfig struct {
 
 // DatabaseConfig 数据库配置
 type DatabaseConfig struct {
-	Host            string `mapstructure:"host"`
-	Port            int    `mapstructure:"port"`
-	User            string `mapstructure:"user"`
-	Password        string `mapstructure:"password"`
-	DBName          string `mapstructure:"dbname"`
-	SSLMode         string `mapstructure:"sslmode"`
-	MaxOpenConns    int    `mapstructure:"max_open_conns"`     // 最大打开连接数
-	MaxIdleConns    int    `mapstructure:"max_idle_conns"`     // 最大空闲连接数
-	ConnMaxLifetime int    `mapstructure:"conn_max_lifetime"`  // 连接最大生命周期（秒）
-	ConnMaxIdleTime int    `mapstructure:"conn_max_idle_time"` // 空闲连接超时（秒）
+	Host            string          `mapstructure:"host"`
+	Port            int             `mapstructure:"port"`
+	User            string          `mapstructure:"user"`
+	Password        string          `mapstructure:"password"`
+	DBName          string          `mapstructure:"dbname"`
+	SSLMode         string          `mapstructure:"sslmode"`
+	MaxOpenConns    int             `mapstructure:"max_open_conns"`     // 最大打开连接数
+	MaxIdleConns    int             `mapstructure:"max_idle_conns"`     // 最大空闲连接数
+	ConnMaxLifetime int             `mapstructure:"conn_max_lifetime"`  // 连接最大生命周期（秒）
+	ConnMaxIdleTime int             `mapstructure:"conn_max_idle_time"` // 空闲连接超时（秒）
+	Replicas        []ReplicaConfig `mapstructure:"replicas"`           // 从库配置列表
+}
+
+// ReplicaConfig 从库配置
+type ReplicaConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	User     string `mapstructure:"user"`
+	Password string `mapstructure:"password"`
+	DBName   string `mapstructure:"dbname"`
+	SSLMode  string `mapstructure:"sslmode"`
 }
 
 // RedisConfig Redis配置
@@ -122,6 +133,18 @@ func (c *DatabaseConfig) GetDSN() string {
 	return fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		c.Host, c.Port, c.User, c.Password, c.DBName, c.SSLMode,
+	)
+}
+
+// GetReplicaDSN 获取从库连接字符串
+func (r *ReplicaConfig) GetReplicaDSN() string {
+	sslMode := r.SSLMode
+	if sslMode == "" {
+		sslMode = "disable"
+	}
+	return fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		r.Host, r.Port, r.User, r.Password, r.DBName, sslMode,
 	)
 }
 

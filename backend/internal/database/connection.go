@@ -15,7 +15,7 @@ import (
 // DB 全局数据库连接
 var DB *gorm.DB
 
-// Connect 连接数据库
+// Connect 连接数据库（支持读写分离）
 func Connect(cfg *config.DatabaseConfig, log *zap.Logger) (*gorm.DB, error) {
 	if log == nil {
 		log = zap.NewNop()
@@ -32,7 +32,7 @@ func Connect(cfg *config.DatabaseConfig, log *zap.Logger) (*gorm.DB, error) {
 		},
 	)
 
-	// 连接数据库
+	// 连接主库
 	db, err := gorm.Open(postgres.Open(cfg.GetDSN()), &gorm.Config{
 		Logger:                                   gormLogger,
 		DisableForeignKeyConstraintWhenMigrating: true,
@@ -62,12 +62,20 @@ func Connect(cfg *config.DatabaseConfig, log *zap.Logger) (*gorm.DB, error) {
 		sqlDB.SetConnMaxIdleTime(time.Duration(cfg.ConnMaxIdleTime) * time.Second)
 	}
 
+	// 配置读写分离（如果提供了从库配置）
+	if len(cfg.Replicas) > 0 {
+		if err := setupReadWriteSplitting(db, cfg, log); err != nil {
+			return nil, fmt.Errorf("failed to setup read-write splitting: %w", err)
+		}
+	}
+
 	log.Info("Database connected successfully",
 		zap.String("host", cfg.Host),
 		zap.Int("port", cfg.Port),
 		zap.String("database", cfg.DBName),
 		zap.Int("max_open_conns", cfg.MaxOpenConns),
 		zap.Int("max_idle_conns", cfg.MaxIdleConns),
+		zap.Int("replicas", len(cfg.Replicas)),
 	)
 
 	// 设置全局 DB
