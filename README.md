@@ -151,7 +151,37 @@ docker-compose up -d
 docker-compose ps
 ```
 
-### 3. 启动后端服务
+### 3. 数据库迁移
+
+```bash
+cd backend
+
+# 设置代理（国内网络环境）
+export https_proxy=http://127.0.0.1:7890
+export http_proxy=http://127.0.0.1:7890
+export all_proxy=socks5://127.0.0.1:7890
+export GOPROXY=https://goproxy.cn,direct
+
+# 安装golang-migrate工具
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+# 执行数据库迁移
+migrate -path ./migrations -database "postgres://postgres:password@localhost:5432/cryptosignal?sslmode=disable" up
+
+# 验证迁移结果
+migrate -path ./migrations -database "postgres://postgres:password@localhost:5432/cryptosignal?sslmode=disable" version
+```
+
+**数据库配置说明**:
+- 数据库名: `cryptosignal`
+- 用户名: `postgres`
+- 密码: `password`
+- 端口: `5432`
+- TimescaleDB扩展已启用
+- 包含3个核心表: `symbols`, `price_ticks`, `klines`
+- 配置了数据压缩和保留策略
+
+### 4. 启动后端服务
 
 ```bash
 cd backend
@@ -177,7 +207,7 @@ make run
 - **健康检查**: http://localhost:8080/health
 - **API文档**: http://localhost:8080/swagger/index.html
 
-### 4. 启动前端服务
+### 5. 启动前端服务
 
 ```bash
 cd frontend
@@ -262,9 +292,21 @@ cex-arbitrage/
 │   │   ├── api/             # API路由和处理器
 │   │   ├── config/          # 配置管理
 │   │   ├── middleware/      # 中间件
-│   │   └── models/          # 数据模型
+│   │   ├── models/          # 数据模型
+│   │   ├── database/      # 数据库连接和事务
+│   │   ├── dao/             # 数据访问层
+│   │   └── cache/           # Redis缓存层
 │   ├── pkg/                 # 公共包
-│   ├── docs/                # Swagger文档
+│   ├── docs/                # 文档目录
+│   │   └── database-migration.md  # 数据库迁移文档
+│   ├── examples/            # 示例代码
+│   │   ├── dao_usage.go     # DAO使用示例
+│   │   └── cache_usage.go   # 缓存使用示例
+│   ├── migrations/          # 数据库迁移文件
+│   │   ├── 000001_enable_timescaledb.up.sql
+│   │   ├── 000002_create_symbols_table.up.sql
+│   │   ├── 000003_create_timeseries_tables.up.sql
+│   │   └── 000004_configure_timescaledb_policies.up.sql
 │   ├── config.yaml          # 配置文件
 │   ├── .air.toml            # Air配置
 │   ├── .golangci.yml        # Linter配置
@@ -421,6 +463,68 @@ go mod download
 
 # 如果仍然失败，尝试使用七牛云代理
 export GOPROXY=https://goproxy.io,direct
+```
+
+### 8. 数据库迁移失败
+
+**问题**: 执行 `migrate up` 时失败
+
+**解决方案**:
+```bash
+# 检查数据库连接
+psql -h localhost -U postgres -d cryptosignal -c "SELECT version();"
+
+# 检查TimescaleDB扩展
+psql -h localhost -U postgres -d cryptosignal -c "SELECT * FROM pg_extension WHERE extname = 'timescaledb';"
+
+# 查看迁移状态
+migrate -path ./migrations -database "postgres://postgres:password@localhost:5432/cryptosignal?sslmode=disable" version
+
+# 强制回滚到指定版本
+migrate -path ./migrations -database "postgres://postgres:password@localhost:5432/cryptosignal?sslmode=disable" force 0
+
+# 重新执行迁移
+migrate -path ./migrations -database "postgres://postgres:password@localhost:5432/cryptosignal?sslmode=disable" up
+```
+
+### 9. TimescaleDB扩展未安装
+
+**问题**: 迁移时报错 "extension 'timescaledb' does not exist"
+
+**解决方案**:
+```bash
+# 检查Docker容器中的TimescaleDB
+docker exec -it cryptosignal-postgres psql -U postgres -d cryptosignal -c "SELECT * FROM pg_available_extensions WHERE name = 'timescaledb';"
+
+# 如果TimescaleDB未安装，重新构建Docker镜像
+docker-compose down
+docker-compose build --no-cache postgres
+docker-compose up -d postgres
+
+# 等待数据库启动完成
+sleep 10
+
+# 重新执行迁移
+migrate -path ./migrations -database "postgres://postgres:password@localhost:5432/cryptosignal?sslmode=disable" up
+```
+
+### 10. Redis连接失败
+
+**问题**: 后端启动时提示Redis连接失败
+
+**解决方案**:
+```bash
+# 检查Redis服务状态
+docker-compose ps redis
+
+# 查看Redis日志
+docker-compose logs redis
+
+# 测试Redis连接
+docker exec -it cryptosignal-redis redis-cli ping
+
+# 重启Redis服务
+docker-compose restart redis
 ```
 
 ## 📝 开发规范
