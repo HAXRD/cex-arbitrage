@@ -44,17 +44,17 @@
   - [x] 4.7 编写数据库连接测试（测试连接、连接池、健康检查）
   - [x] 4.8 验证所有测试通过
 
-- [ ] 5. SymbolDAO 实现
-  - [ ] 5.1 编写 SymbolDAO 单元测试（使用 testify 和内存数据库）
-  - [ ] 5.2 实现 SymbolDAO 接口定义（Create, GetBySymbol, List, Update, Delete）
-  - [ ] 5.3 实现 Create 方法（插入单个交易对，处理唯一约束冲突）
-  - [ ] 5.4 实现 CreateBatch 方法（批量插入，单次最多1000条）
-  - [ ] 5.5 实现 GetBySymbol 方法（根据 symbol 精确查询）
-  - [ ] 5.6 实现 List 方法（查询所有交易对，支持 is_active 过滤）
-  - [ ] 5.7 实现 Update 方法（更新交易对信息）
-  - [ ] 5.8 实现 Upsert 方法（存在则更新，不存在则插入）
-  - [ ] 5.9 验证所有单元测试通过
-  - [ ] 5.10 编写集成测试（真实数据库）并验证通过
+- [x] 5. SymbolDAO 实现 ✅ **已完成**
+  - [x] 5.1 编写 SymbolDAO 单元测试（使用 testify 和内存数据库）
+  - [x] 5.2 实现 SymbolDAO 接口定义（Create, GetBySymbol, List, Update, Delete）
+  - [x] 5.3 实现 Create 方法（插入单个交易对，处理唯一约束冲突）
+  - [x] 5.4 实现 CreateBatch 方法（批量插入，单次最多1000条）
+  - [x] 5.5 实现 GetBySymbol 方法（根据 symbol 精确查询）
+  - [x] 5.6 实现 List 方法（查询所有交易对，支持 is_active 过滤）
+  - [x] 5.7 实现 Update 方法（更新交易对信息）
+  - [x] 5.8 实现 Upsert 方法（存在则更新，不存在则插入）
+  - [x] 5.9 验证所有单元测试通过
+  - [x] 5.10 编写集成测试（真实数据库）并验证通过
 
 - [ ] 6. KlineDAO 实现
   - [ ] 6.1 编写 KlineDAO 单元测试

@@ -160,6 +160,34 @@ func ParseError(err error) error {
 	return err
 }
 
+// NewDatabaseError 创建带消息的数据库错误（别名函数，便于使用）
+func NewDatabaseError(message string, err error) error {
+	return fmt.Errorf("%s: %w", message, err)
+}
+
+// WrapDatabaseError 包装数据库错误并添加上下文消息
+func WrapDatabaseError(err error, message string) error {
+	if err == nil {
+		return nil
+	}
+	
+	// 先解析错误类型
+	parsedErr := ParseError(err)
+	
+	// 返回带上下文的错误
+	return fmt.Errorf("%s: %w", message, parsedErr)
+}
+
+// IsNotFoundError 检查是否为记录未找到错误（别名函数）
+func IsNotFoundError(err error) bool {
+	return IsNotFound(err)
+}
+
+// IsDuplicateKeyError 检查是否为重复键错误（别名函数）
+func IsDuplicateKeyError(err error) bool {
+	return IsDuplicateKey(err)
+}
+
 // contains 检查字符串是否包含子串（不区分大小写）
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && (s[:len(substr)] == substr ||

@@ -43,9 +43,9 @@ type Symbol struct {
 	MaintainTime        *int64         `json:"maintain_time,omitempty"`
 	MaxMarketOrderQty   *float64       `gorm:"type:decimal(20,8)" json:"max_market_order_qty,omitempty"`
 	MaxOrderQty         *float64       `gorm:"type:decimal(20,8)" json:"max_order_qty,omitempty"`
-	IsActive            bool           `gorm:"default:true;index:idx_symbols_is_active,where:is_active = true" json:"is_active"`
-	CreatedAt           time.Time      `gorm:"type:timestamptz;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt           time.Time      `gorm:"type:timestamptz;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	IsActive            bool           `gorm:"index:idx_symbols_is_active,where:is_active = true" json:"is_active"`
+	CreatedAt           time.Time      `json:"created_at"`
+	UpdatedAt           time.Time      `json:"updated_at"`
 }
 
 // TableName 指定表名

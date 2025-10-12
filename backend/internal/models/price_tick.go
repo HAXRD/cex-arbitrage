@@ -7,7 +7,7 @@ import (
 // PriceTick 实时价格数据模型
 type PriceTick struct {
 	Symbol            string    `gorm:"type:varchar(50);not null;index:idx_price_ticks_symbol_timestamp,priority:1" json:"symbol"`
-	Timestamp         time.Time `gorm:"type:timestamptz;not null;index:idx_price_ticks_symbol_timestamp,priority:2,sort:desc;index:idx_price_ticks_timestamp,sort:desc" json:"timestamp"`
+	Timestamp         time.Time `gorm:"not null;index:idx_price_ticks_symbol_timestamp,priority:2,sort:desc;index:idx_price_ticks_timestamp,sort:desc" json:"timestamp"`
 	LastPrice         float64   `gorm:"type:decimal(20,8);not null" json:"last_price"`
 	AskPrice          *float64  `gorm:"type:decimal(20,8)" json:"ask_price,omitempty"`
 	BidPrice          *float64  `gorm:"type:decimal(20,8)" json:"bid_price,omitempty"`
@@ -29,7 +29,7 @@ type PriceTick struct {
 	DeliveryStartTime *int64    `json:"delivery_start_time,omitempty"`
 	DeliveryTime      *int64    `json:"delivery_time,omitempty"`
 	DeliveryStatus    string    `gorm:"type:varchar(30)" json:"delivery_status,omitempty"`
-	CreatedAt         time.Time `gorm:"type:timestamptz;default:CURRENT_TIMESTAMP" json:"created_at"`
+	CreatedAt         time.Time `json:"created_at"`
 }
 
 // TableName 指定表名
