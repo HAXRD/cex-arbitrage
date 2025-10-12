@@ -14,11 +14,12 @@ import (
 	"github.com/haxrd/cryptosignal-hunter/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 // setupPriceTickIntegrationTestDB 创建集成测试数据库连接
-func setupPriceTickIntegrationTestDB(t *testing.T) *gorm.DB {
+func setupPriceTickIntegrationTestDB(t *testing.T) (*gorm.DB, *zap.Logger) {
 	// 从环境变量读取数据库连接信息
 	host := os.Getenv("TEST_DB_HOST")
 	if host == "" {
@@ -36,14 +37,16 @@ func setupPriceTickIntegrationTestDB(t *testing.T) *gorm.DB {
 		ConnMaxLifetime: 3600,
 	}
 
-	db, err := database.Connect(cfg, nil)
+	logger, _ := zap.NewDevelopment()
+	
+	db, err := database.Connect(cfg, logger)
 	require.NoError(t, err)
 
 	// 清理测试数据
 	err = db.Exec("TRUNCATE TABLE price_ticks").Error
 	require.NoError(t, err)
 
-	return db
+	return db, logger
 }
 
 // TestPriceTickDAO_Integration_Create 集成测试：创建价格数据
@@ -52,8 +55,8 @@ func TestPriceTickDAO_Integration_Create(t *testing.T) {
 		t.Skip("跳过集成测试")
 	}
 
-	db := setupPriceTickIntegrationTestDB(t)
-	dao := NewPriceTickDAO(db)
+	db, logger := setupPriceTickIntegrationTestDB(t)
+	dao := NewPriceTickDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("创建单条价格数据到真实数据库", func(t *testing.T) {
@@ -96,8 +99,8 @@ func TestPriceTickDAO_Integration_CreateBatch(t *testing.T) {
 		t.Skip("跳过集成测试")
 	}
 
-	db := setupPriceTickIntegrationTestDB(t)
-	dao := NewPriceTickDAO(db)
+	db, logger := setupPriceTickIntegrationTestDB(t)
+	dao := NewPriceTickDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("批量插入100条价格数据", func(t *testing.T) {
@@ -150,8 +153,8 @@ func TestPriceTickDAO_Integration_QueryPerformance(t *testing.T) {
 		t.Skip("跳过集成测试")
 	}
 
-	db := setupPriceTickIntegrationTestDB(t)
-	dao := NewPriceTickDAO(db)
+	db, logger := setupPriceTickIntegrationTestDB(t)
+	dao := NewPriceTickDAO(db, logger)
 	ctx := context.Background()
 
 	// 准备测试数据：插入1000条价格数据
@@ -221,8 +224,8 @@ func TestPriceTickDAO_Integration_ConcurrentAccess(t *testing.T) {
 		t.Skip("跳过集成测试")
 	}
 
-	db := setupPriceTickIntegrationTestDB(t)
-	dao := NewPriceTickDAO(db)
+	db, logger := setupPriceTickIntegrationTestDB(t)
+	dao := NewPriceTickDAO(db, logger)
 
 	t.Run("并发插入测试", func(t *testing.T) {
 		now := time.Now().UTC().Truncate(time.Second)
@@ -300,8 +303,8 @@ func TestPriceTickDAO_Integration_DataConsistency(t *testing.T) {
 		t.Skip("跳过集成测试")
 	}
 
-	db := setupPriceTickIntegrationTestDB(t)
-	dao := NewPriceTickDAO(db)
+	db, logger := setupPriceTickIntegrationTestDB(t)
+	dao := NewPriceTickDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("验证时间戳精度", func(t *testing.T) {
@@ -373,8 +376,8 @@ func TestPriceTickDAO_Integration_GetLatestMultiple(t *testing.T) {
 		t.Skip("跳过集成测试")
 	}
 
-	db := setupPriceTickIntegrationTestDB(t)
-	dao := NewPriceTickDAO(db)
+	db, logger := setupPriceTickIntegrationTestDB(t)
+	dao := NewPriceTickDAO(db, logger)
 	ctx := context.Background()
 
 	// 为50个交易对创建数据

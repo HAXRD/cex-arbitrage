@@ -14,6 +14,7 @@ type Config struct {
 	Database DatabaseConfig `mapstructure:"database"`
 	Redis    RedisConfig    `mapstructure:"redis"`
 	Bitget   BitgetConfig   `mapstructure:"bitget"`
+	Log      LogConfig      `mapstructure:"log"`
 }
 
 // ServerConfig 服务器配置
@@ -73,6 +74,13 @@ type BitgetConfig struct {
 	MaxReconnectAttempts int           `mapstructure:"max_reconnect_attempts"`
 	ReconnectBaseDelay   time.Duration `mapstructure:"reconnect_base_delay"`
 	ReconnectMaxDelay    time.Duration `mapstructure:"reconnect_max_delay"`
+}
+
+// LogConfig 日志配置
+type LogConfig struct {
+	Level  string `mapstructure:"level"`  // debug, info, warn, error
+	Format string `mapstructure:"format"` // json, console
+	Output string `mapstructure:"output"` // stdout, stderr, file
 }
 
 // Load 加载配置文件

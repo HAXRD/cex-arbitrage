@@ -15,11 +15,12 @@ import (
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 // setupIntegrationDB 连接真实数据库（需要 Docker PostgreSQL 运行）
-func setupIntegrationDB(t *testing.T) *gorm.DB {
+func setupIntegrationDB(t *testing.T) (*gorm.DB, *zap.Logger) {
 	cfg := &config.DatabaseConfig{
 		Host:            "localhost",
 		Port:            5432,
@@ -31,7 +32,9 @@ func setupIntegrationDB(t *testing.T) *gorm.DB {
 		ConnMaxLifetime: 3600,
 	}
 
-	db, err := database.Connect(cfg, nil)
+	logger, _ := zap.NewDevelopment()
+	
+	db, err := database.Connect(cfg, logger)
 	require.NoError(t, err, "Failed to connect to database. Make sure PostgreSQL is running (docker-compose up -d)")
 
 	// 自动迁移
@@ -41,7 +44,7 @@ func setupIntegrationDB(t *testing.T) *gorm.DB {
 	// 清理测试数据
 	db.Exec("DELETE FROM symbols WHERE symbol LIKE 'TEST%'")
 
-	return db
+	return db, logger
 }
 
 // cleanupIntegrationDB 清理测试数据
@@ -50,10 +53,10 @@ func cleanupIntegrationDB(t *testing.T, db *gorm.DB) {
 }
 
 func TestSymbolDAO_Integration_Create(t *testing.T) {
-	db := setupIntegrationDB(t)
+	db, logger := setupIntegrationDB(t)
 	defer cleanupIntegrationDB(t, db)
 
-	dao := NewSymbolDAO(db)
+	dao := NewSymbolDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("插入真实数据并验证", func(t *testing.T) {
@@ -93,10 +96,10 @@ func TestSymbolDAO_Integration_Create(t *testing.T) {
 }
 
 func TestSymbolDAO_Integration_BatchOperations(t *testing.T) {
-	db := setupIntegrationDB(t)
+	db, logger := setupIntegrationDB(t)
 	defer cleanupIntegrationDB(t, db)
 
-	dao := NewSymbolDAO(db)
+	dao := NewSymbolDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("批量插入100条数据", func(t *testing.T) {
@@ -128,10 +131,10 @@ func TestSymbolDAO_Integration_BatchOperations(t *testing.T) {
 }
 
 func TestSymbolDAO_Integration_Upsert(t *testing.T) {
-	db := setupIntegrationDB(t)
+	db, logger := setupIntegrationDB(t)
 	defer cleanupIntegrationDB(t, db)
 
-	dao := NewSymbolDAO(db)
+	dao := NewSymbolDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("Upsert操作验证ON CONFLICT", func(t *testing.T) {
@@ -167,10 +170,10 @@ func TestSymbolDAO_Integration_Upsert(t *testing.T) {
 }
 
 func TestSymbolDAO_Integration_PostgreSQLArrayType(t *testing.T) {
-	db := setupIntegrationDB(t)
+	db, logger := setupIntegrationDB(t)
 	defer cleanupIntegrationDB(t, db)
 
-	dao := NewSymbolDAO(db)
+	dao := NewSymbolDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("PostgreSQL数组类型验证", func(t *testing.T) {
@@ -195,10 +198,10 @@ func TestSymbolDAO_Integration_PostgreSQLArrayType(t *testing.T) {
 }
 
 func TestSymbolDAO_Integration_Concurrency(t *testing.T) {
-	db := setupIntegrationDB(t)
+	db, logger := setupIntegrationDB(t)
 	defer cleanupIntegrationDB(t, db)
 
-	dao := NewSymbolDAO(db)
+	dao := NewSymbolDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("并发插入测试", func(t *testing.T) {

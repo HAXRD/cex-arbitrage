@@ -14,11 +14,12 @@ import (
 	"github.com/haxrd/cryptosignal-hunter/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 // setupKlineIntegrationTestDB 创建集成测试数据库连接
-func setupKlineIntegrationTestDB(t *testing.T) *gorm.DB {
+func setupKlineIntegrationTestDB(t *testing.T) (*gorm.DB, *zap.Logger) {
 	// 从环境变量读取数据库连接信息
 	host := os.Getenv("TEST_DB_HOST")
 	if host == "" {
@@ -36,14 +37,16 @@ func setupKlineIntegrationTestDB(t *testing.T) *gorm.DB {
 		ConnMaxLifetime: 3600,
 	}
 
-	db, err := database.Connect(cfg, nil)
+	logger, _ := zap.NewDevelopment()
+	
+	db, err := database.Connect(cfg, logger)
 	require.NoError(t, err)
 
 	// 清理测试数据
 	err = db.Exec("TRUNCATE TABLE klines").Error
 	require.NoError(t, err)
 
-	return db
+	return db, logger
 }
 
 // TestKlineDAO_Integration_Create 集成测试：创建K线数据
@@ -52,8 +55,8 @@ func TestKlineDAO_Integration_Create(t *testing.T) {
 		t.Skip("跳过集成测试")
 	}
 
-	db := setupKlineIntegrationTestDB(t)
-	dao := NewKlineDAO(db)
+	db, logger := setupKlineIntegrationTestDB(t)
+	dao := NewKlineDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("创建单条K线到真实数据库", func(t *testing.T) {
@@ -91,8 +94,8 @@ func TestKlineDAO_Integration_CreateBatch(t *testing.T) {
 		t.Skip("跳过集成测试")
 	}
 
-	db := setupKlineIntegrationTestDB(t)
-	dao := NewKlineDAO(db)
+	db, logger := setupKlineIntegrationTestDB(t)
+	dao := NewKlineDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("批量插入100条K线数据", func(t *testing.T) {
@@ -147,8 +150,8 @@ func TestKlineDAO_Integration_QueryPerformance(t *testing.T) {
 		t.Skip("跳过集成测试")
 	}
 
-	db := setupKlineIntegrationTestDB(t)
-	dao := NewKlineDAO(db)
+	db, logger := setupKlineIntegrationTestDB(t)
+	dao := NewKlineDAO(db, logger)
 	ctx := context.Background()
 
 	// 准备测试数据：插入1000条K线数据
@@ -211,8 +214,8 @@ func TestKlineDAO_Integration_ExplainAnalyze(t *testing.T) {
 		t.Skip("跳过集成测试")
 	}
 
-	db := setupKlineIntegrationTestDB(t)
-	dao := NewKlineDAO(db)
+	db, logger := setupKlineIntegrationTestDB(t)
+	dao := NewKlineDAO(db, logger)
 	ctx := context.Background()
 
 	// 准备测试数据
@@ -269,8 +272,8 @@ func TestKlineDAO_Integration_ConcurrentAccess(t *testing.T) {
 		t.Skip("跳过集成测试")
 	}
 
-	db := setupKlineIntegrationTestDB(t)
-	dao := NewKlineDAO(db)
+	db, logger := setupKlineIntegrationTestDB(t)
+	dao := NewKlineDAO(db, logger)
 
 	t.Run("并发插入测试", func(t *testing.T) {
 		now := time.Now().UTC().Truncate(time.Minute)
@@ -348,8 +351,8 @@ func TestKlineDAO_Integration_DataConsistency(t *testing.T) {
 		t.Skip("跳过集成测试")
 	}
 
-	db := setupKlineIntegrationTestDB(t)
-	dao := NewKlineDAO(db)
+	db, logger := setupKlineIntegrationTestDB(t)
+	dao := NewKlineDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("验证时间戳精度", func(t *testing.T) {

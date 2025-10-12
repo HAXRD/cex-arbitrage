@@ -9,13 +9,14 @@ import (
 	"github.com/haxrd/cryptosignal-hunter/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
 // setupKlineTestDB 创建测试数据库
-func setupKlineTestDB(t *testing.T) *gorm.DB {
+func setupKlineTestDB(t *testing.T) (*gorm.DB, *zap.Logger) {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
@@ -25,7 +26,8 @@ func setupKlineTestDB(t *testing.T) *gorm.DB {
 	err = db.AutoMigrate(&models.Kline{})
 	require.NoError(t, err)
 
-	return db
+	logger, _ := zap.NewDevelopment()
+	return db, logger
 }
 
 // createTestKline 创建测试用的K线数据
@@ -44,8 +46,8 @@ func createTestKline(symbol, granularity string, timestamp time.Time) *models.Kl
 }
 
 func TestKlineDAO_Create(t *testing.T) {
-	db := setupKlineTestDB(t)
-	dao := NewKlineDAO(db)
+	db, logger := setupKlineTestDB(t)
+	dao := NewKlineDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("成功创建K线", func(t *testing.T) {
@@ -99,8 +101,8 @@ func TestKlineDAO_Create(t *testing.T) {
 }
 
 func TestKlineDAO_CreateBatch(t *testing.T) {
-	db := setupKlineTestDB(t)
-	dao := NewKlineDAO(db)
+	db, logger := setupKlineTestDB(t)
+	dao := NewKlineDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("成功批量创建K线", func(t *testing.T) {
@@ -173,8 +175,8 @@ func TestKlineDAO_CreateBatch(t *testing.T) {
 }
 
 func TestKlineDAO_GetByRange(t *testing.T) {
-	db := setupKlineTestDB(t)
-	dao := NewKlineDAO(db)
+	db, logger := setupKlineTestDB(t)
+	dao := NewKlineDAO(db, logger)
 	ctx := context.Background()
 
 	// 准备测试数据：创建10条K线数据（每分钟一条）
@@ -261,8 +263,8 @@ func TestKlineDAO_GetByRange(t *testing.T) {
 }
 
 func TestKlineDAO_GetLatest(t *testing.T) {
-	db := setupKlineTestDB(t)
-	dao := NewKlineDAO(db)
+	db, logger := setupKlineTestDB(t)
+	dao := NewKlineDAO(db, logger)
 	ctx := context.Background()
 
 	// 准备测试数据：创建10条K线数据
@@ -311,8 +313,8 @@ func TestKlineDAO_GetLatest(t *testing.T) {
 }
 
 func TestKlineDAO_GetBySymbolAndGranularity(t *testing.T) {
-	db := setupKlineTestDB(t)
-	dao := NewKlineDAO(db)
+	db, logger := setupKlineTestDB(t)
+	dao := NewKlineDAO(db, logger)
 	ctx := context.Background()
 
 	// 准备测试数据：不同交易对和周期

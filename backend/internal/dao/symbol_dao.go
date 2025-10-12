@@ -6,6 +6,7 @@ import (
 
 	"github.com/haxrd/cryptosignal-hunter/internal/database"
 	"github.com/haxrd/cryptosignal-hunter/internal/models"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -36,18 +37,25 @@ type SymbolDAO interface {
 
 // symbolDAOImpl SymbolDAO 实现
 type symbolDAOImpl struct {
-	db *gorm.DB
+	db     *gorm.DB
+	logger *zap.Logger
 }
 
 // NewSymbolDAO 创建 SymbolDAO 实例
-func NewSymbolDAO(db *gorm.DB) SymbolDAO {
+func NewSymbolDAO(db *gorm.DB, logger *zap.Logger) SymbolDAO {
+	if logger == nil {
+		logger = zap.NewNop()
+	}
 	return &symbolDAOImpl{
-		db: db,
+		db:     db,
+		logger: logger,
 	}
 }
 
 // Create 创建单个交易对
 func (d *symbolDAOImpl) Create(ctx context.Context, symbol *models.Symbol) error {
+	start := startOperation()
+	
 	if symbol == nil {
 		return database.ErrInvalidInput
 	}
@@ -58,15 +66,30 @@ func (d *symbolDAOImpl) Create(ctx context.Context, symbol *models.Symbol) error
 
 	// 使用 Select 明确指定要插入的字段，包括 is_active
 	result := d.db.WithContext(ctx).Select("*").Create(symbol)
-	if result.Error != nil {
-		return database.WrapDatabaseError(result.Error, "failed to create symbol")
+	
+	duration := durationSince(start)
+	err := result.Error
+	
+	if err != nil {
+		err = database.WrapDatabaseError(err, "failed to create symbol")
+		logDAOOperation(d.logger, "SymbolDAO.Create", duration, err,
+			zap.String("symbol", symbol.Symbol),
+		)
+		return err
 	}
+
+	logDAOOperation(d.logger, "SymbolDAO.Create", duration, nil,
+		zap.String("symbol", symbol.Symbol),
+		zap.Int64("id", symbol.ID),
+	)
 
 	return nil
 }
 
 // CreateBatch 批量创建交易对（单次最多1000条）
 func (d *symbolDAOImpl) CreateBatch(ctx context.Context, symbols []*models.Symbol) error {
+	start := startOperation()
+	
 	if len(symbols) == 0 {
 		return database.ErrInvalidInput
 	}
@@ -93,15 +116,29 @@ func (d *symbolDAOImpl) CreateBatch(ctx context.Context, symbols []*models.Symbo
 		Clauses(clause.OnConflict{DoNothing: true}).
 		Create(symbols)
 
-	if result.Error != nil {
-		return database.WrapDatabaseError(result.Error, "failed to batch create symbols")
+	duration := durationSince(start)
+	err := result.Error
+	
+	if err != nil {
+		err = database.WrapDatabaseError(err, "failed to batch create symbols")
+		logDAOOperation(d.logger, "SymbolDAO.CreateBatch", duration, err,
+			zap.Int("count", len(symbols)),
+		)
+		return err
 	}
+
+	logDAOOperation(d.logger, "SymbolDAO.CreateBatch", duration, nil,
+		zap.Int("count", len(symbols)),
+		zap.Int64("rows_affected", result.RowsAffected),
+	)
 
 	return nil
 }
 
 // GetBySymbol 根据交易对名称查询
 func (d *symbolDAOImpl) GetBySymbol(ctx context.Context, symbol string) (*models.Symbol, error) {
+	start := startOperation()
+	
 	if symbol == "" {
 		return nil, database.ErrInvalidInput
 	}
@@ -111,18 +148,35 @@ func (d *symbolDAOImpl) GetBySymbol(ctx context.Context, symbol string) (*models
 		Where("symbol = ?", symbol).
 		First(&result).Error
 
+	duration := durationSince(start)
+	
 	if err != nil {
 		if database.IsNotFoundError(err) {
+			logDAOOperation(d.logger, "SymbolDAO.GetBySymbol", duration, database.ErrRecordNotFound,
+				zap.String("symbol", symbol),
+				zap.Bool("found", false),
+			)
 			return nil, database.ErrRecordNotFound
 		}
-		return nil, database.WrapDatabaseError(err, "failed to get symbol")
+		err = database.WrapDatabaseError(err, "failed to get symbol")
+		logDAOOperation(d.logger, "SymbolDAO.GetBySymbol", duration, err,
+			zap.String("symbol", symbol),
+		)
+		return nil, err
 	}
+
+	logDAOOperation(d.logger, "SymbolDAO.GetBySymbol", duration, nil,
+		zap.String("symbol", symbol),
+		zap.Int64("id", result.ID),
+	)
 
 	return &result, nil
 }
 
 // List 查询交易对列表
 func (d *symbolDAOImpl) List(ctx context.Context, activeOnly bool) ([]*models.Symbol, error) {
+	start := startOperation()
+	
 	var symbols []*models.Symbol
 
 	query := d.db.WithContext(ctx)
@@ -131,15 +185,29 @@ func (d *symbolDAOImpl) List(ctx context.Context, activeOnly bool) ([]*models.Sy
 	}
 
 	err := query.Order("symbol ASC").Find(&symbols).Error
+	
+	duration := durationSince(start)
+	
 	if err != nil {
-		return nil, database.WrapDatabaseError(err, "failed to list symbols")
+		err = database.WrapDatabaseError(err, "failed to list symbols")
+		logDAOOperation(d.logger, "SymbolDAO.List", duration, err,
+			zap.Bool("active_only", activeOnly),
+		)
+		return nil, err
 	}
+
+	logDAOOperation(d.logger, "SymbolDAO.List", duration, nil,
+		zap.Bool("active_only", activeOnly),
+		zap.Int("count", len(symbols)),
+	)
 
 	return symbols, nil
 }
 
 // Update 更新交易对信息
 func (d *symbolDAOImpl) Update(ctx context.Context, symbol *models.Symbol) error {
+	start := startOperation()
+	
 	if symbol == nil || symbol.Symbol == "" {
 		return database.ErrInvalidInput
 	}
@@ -149,19 +217,37 @@ func (d *symbolDAOImpl) Update(ctx context.Context, symbol *models.Symbol) error
 		Where("symbol = ?", symbol.Symbol).
 		Updates(symbol)
 
-	if result.Error != nil {
-		return database.WrapDatabaseError(result.Error, "failed to update symbol")
+	duration := durationSince(start)
+	err := result.Error
+	
+	if err != nil {
+		err = database.WrapDatabaseError(err, "failed to update symbol")
+		logDAOOperation(d.logger, "SymbolDAO.Update", duration, err,
+			zap.String("symbol", symbol.Symbol),
+		)
+		return err
 	}
 
 	if result.RowsAffected == 0 {
+		logDAOOperation(d.logger, "SymbolDAO.Update", duration, database.ErrRecordNotFound,
+			zap.String("symbol", symbol.Symbol),
+			zap.Int64("rows_affected", 0),
+		)
 		return database.ErrRecordNotFound
 	}
+
+	logDAOOperation(d.logger, "SymbolDAO.Update", duration, nil,
+		zap.String("symbol", symbol.Symbol),
+		zap.Int64("rows_affected", result.RowsAffected),
+	)
 
 	return nil
 }
 
 // Upsert 如果存在则更新，否则插入
 func (d *symbolDAOImpl) Upsert(ctx context.Context, symbol *models.Symbol) error {
+	start := startOperation()
+	
 	if symbol == nil || symbol.Symbol == "" {
 		return database.ErrInvalidInput
 	}
@@ -185,15 +271,29 @@ func (d *symbolDAOImpl) Upsert(ctx context.Context, symbol *models.Symbol) error
 		}).
 		Create(symbol)
 
-	if result.Error != nil {
-		return database.WrapDatabaseError(result.Error, "failed to upsert symbol")
+	duration := durationSince(start)
+	err := result.Error
+	
+	if err != nil {
+		err = database.WrapDatabaseError(err, "failed to upsert symbol")
+		logDAOOperation(d.logger, "SymbolDAO.Upsert", duration, err,
+			zap.String("symbol", symbol.Symbol),
+		)
+		return err
 	}
+
+	logDAOOperation(d.logger, "SymbolDAO.Upsert", duration, nil,
+		zap.String("symbol", symbol.Symbol),
+		zap.Int64("rows_affected", result.RowsAffected),
+	)
 
 	return nil
 }
 
 // Delete 删除交易对（软删除，设置 is_active = false）
 func (d *symbolDAOImpl) Delete(ctx context.Context, symbol string) error {
+	start := startOperation()
+	
 	if symbol == "" {
 		return database.ErrInvalidInput
 	}
@@ -203,13 +303,29 @@ func (d *symbolDAOImpl) Delete(ctx context.Context, symbol string) error {
 		Where("symbol = ?", symbol).
 		Update("is_active", false)
 
-	if result.Error != nil {
-		return database.WrapDatabaseError(result.Error, "failed to delete symbol")
+	duration := durationSince(start)
+	err := result.Error
+	
+	if err != nil {
+		err = database.WrapDatabaseError(err, "failed to delete symbol")
+		logDAOOperation(d.logger, "SymbolDAO.Delete", duration, err,
+			zap.String("symbol", symbol),
+		)
+		return err
 	}
 
 	if result.RowsAffected == 0 {
+		logDAOOperation(d.logger, "SymbolDAO.Delete", duration, database.ErrRecordNotFound,
+			zap.String("symbol", symbol),
+			zap.Int64("rows_affected", 0),
+		)
 		return database.ErrRecordNotFound
 	}
+
+	logDAOOperation(d.logger, "SymbolDAO.Delete", duration, nil,
+		zap.String("symbol", symbol),
+		zap.Int64("rows_affected", result.RowsAffected),
+	)
 
 	return nil
 }

@@ -9,13 +9,14 @@ import (
 	"github.com/haxrd/cryptosignal-hunter/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
 // setupPriceTickTestDB 创建测试数据库
-func setupPriceTickTestDB(t *testing.T) *gorm.DB {
+func setupPriceTickTestDB(t *testing.T) (*gorm.DB, *zap.Logger) {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
@@ -25,7 +26,8 @@ func setupPriceTickTestDB(t *testing.T) *gorm.DB {
 	err = db.AutoMigrate(&models.PriceTick{})
 	require.NoError(t, err)
 
-	return db
+	logger, _ := zap.NewDevelopment()
+	return db, logger
 }
 
 // createTestPriceTick 创建测试用的价格数据
@@ -52,8 +54,8 @@ func createTestPriceTick(symbol string, timestamp time.Time) *models.PriceTick {
 }
 
 func TestPriceTickDAO_Create(t *testing.T) {
-	db := setupPriceTickTestDB(t)
-	dao := NewPriceTickDAO(db)
+	db, logger := setupPriceTickTestDB(t)
+	dao := NewPriceTickDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("成功创建价格数据", func(t *testing.T) {
@@ -115,8 +117,8 @@ func TestPriceTickDAO_Create(t *testing.T) {
 }
 
 func TestPriceTickDAO_CreateBatch(t *testing.T) {
-	db := setupPriceTickTestDB(t)
-	dao := NewPriceTickDAO(db)
+	db, logger := setupPriceTickTestDB(t)
+	dao := NewPriceTickDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("成功批量创建价格数据", func(t *testing.T) {
@@ -165,8 +167,8 @@ func TestPriceTickDAO_CreateBatch(t *testing.T) {
 }
 
 func TestPriceTickDAO_GetLatest(t *testing.T) {
-	db := setupPriceTickTestDB(t)
-	dao := NewPriceTickDAO(db)
+	db, logger := setupPriceTickTestDB(t)
+	dao := NewPriceTickDAO(db, logger)
 	ctx := context.Background()
 
 	// 准备测试数据：为 BTCUSDT 创建10条价格数据
@@ -199,8 +201,8 @@ func TestPriceTickDAO_GetLatest(t *testing.T) {
 }
 
 func TestPriceTickDAO_GetByRange(t *testing.T) {
-	db := setupPriceTickTestDB(t)
-	dao := NewPriceTickDAO(db)
+	db, logger := setupPriceTickTestDB(t)
+	dao := NewPriceTickDAO(db, logger)
 	ctx := context.Background()
 
 	// 准备测试数据：创建10条价格数据（每分钟一条）
@@ -278,8 +280,8 @@ func TestPriceTickDAO_GetByRange(t *testing.T) {
 }
 
 func TestPriceTickDAO_GetLatestMultiple(t *testing.T) {
-	db := setupPriceTickTestDB(t)
-	dao := NewPriceTickDAO(db)
+	db, logger := setupPriceTickTestDB(t)
+	dao := NewPriceTickDAO(db, logger)
 	ctx := context.Background()
 
 	// 准备测试数据：为多个交易对创建价格数据

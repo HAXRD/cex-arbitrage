@@ -7,6 +7,7 @@ import (
 
 	"github.com/haxrd/cryptosignal-hunter/internal/database"
 	"github.com/haxrd/cryptosignal-hunter/internal/models"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -38,13 +39,18 @@ type KlineDAO interface {
 
 // klineDAOImpl KlineDAO 实现
 type klineDAOImpl struct {
-	db *gorm.DB
+	db     *gorm.DB
+	logger *zap.Logger
 }
 
 // NewKlineDAO 创建 KlineDAO 实例
-func NewKlineDAO(db *gorm.DB) KlineDAO {
+func NewKlineDAO(db *gorm.DB, logger *zap.Logger) KlineDAO {
+	if logger == nil {
+		logger = zap.NewNop()
+	}
 	return &klineDAOImpl{
-		db: db,
+		db:     db,
+		logger: logger,
 	}
 }
 

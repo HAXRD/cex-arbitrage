@@ -7,6 +7,7 @@ import (
 
 	"github.com/haxrd/cryptosignal-hunter/internal/database"
 	"github.com/haxrd/cryptosignal-hunter/internal/models"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -30,13 +31,18 @@ type PriceTickDAO interface {
 
 // priceTickDAOImpl PriceTickDAO 实现
 type priceTickDAOImpl struct {
-	db *gorm.DB
+	db     *gorm.DB
+	logger *zap.Logger
 }
 
 // NewPriceTickDAO 创建 PriceTickDAO 实例
-func NewPriceTickDAO(db *gorm.DB) PriceTickDAO {
+func NewPriceTickDAO(db *gorm.DB, logger *zap.Logger) PriceTickDAO {
+	if logger == nil {
+		logger = zap.NewNop()
+	}
 	return &priceTickDAOImpl{
-		db: db,
+		db:     db,
+		logger: logger,
 	}
 }
 

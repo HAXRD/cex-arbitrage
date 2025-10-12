@@ -9,13 +9,14 @@ import (
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
 // setupTestDB 创建测试数据库
-func setupTestDB(t *testing.T) *gorm.DB {
+func setupTestDB(t *testing.T) (*gorm.DB, *zap.Logger) {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
@@ -25,7 +26,8 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	err = db.AutoMigrate(&models.Symbol{})
 	require.NoError(t, err)
 
-	return db
+	logger, _ := zap.NewDevelopment()
+	return db, logger
 }
 
 // createTestSymbol 创建测试用的交易对
@@ -53,8 +55,8 @@ func createTestSymbol(symbol string) *models.Symbol {
 }
 
 func TestSymbolDAO_Create(t *testing.T) {
-	db := setupTestDB(t)
-	dao := NewSymbolDAO(db)
+	db, logger := setupTestDB(t)
+	dao := NewSymbolDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("成功创建交易对", func(t *testing.T) {
@@ -97,8 +99,8 @@ func TestSymbolDAO_Create(t *testing.T) {
 }
 
 func TestSymbolDAO_CreateBatch(t *testing.T) {
-	db := setupTestDB(t)
-	dao := NewSymbolDAO(db)
+	db, logger := setupTestDB(t)
+	dao := NewSymbolDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("成功批量创建交易对", func(t *testing.T) {
@@ -165,8 +167,8 @@ func TestSymbolDAO_CreateBatch(t *testing.T) {
 }
 
 func TestSymbolDAO_GetBySymbol(t *testing.T) {
-	db := setupTestDB(t)
-	dao := NewSymbolDAO(db)
+	db, logger := setupTestDB(t)
+	dao := NewSymbolDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("成功查询交易对", func(t *testing.T) {
@@ -195,8 +197,8 @@ func TestSymbolDAO_GetBySymbol(t *testing.T) {
 }
 
 func TestSymbolDAO_List(t *testing.T) {
-	db := setupTestDB(t)
-	dao := NewSymbolDAO(db)
+	db, logger := setupTestDB(t)
+	dao := NewSymbolDAO(db, logger)
 	ctx := context.Background()
 
 	// 准备测试数据
@@ -246,8 +248,8 @@ func TestSymbolDAO_List(t *testing.T) {
 }
 
 func TestSymbolDAO_Update(t *testing.T) {
-	db := setupTestDB(t)
-	dao := NewSymbolDAO(db)
+	db, logger := setupTestDB(t)
+	dao := NewSymbolDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("成功更新交易对", func(t *testing.T) {
@@ -290,8 +292,8 @@ func TestSymbolDAO_Update(t *testing.T) {
 }
 
 func TestSymbolDAO_Upsert(t *testing.T) {
-	db := setupTestDB(t)
-	dao := NewSymbolDAO(db)
+	db, logger := setupTestDB(t)
+	dao := NewSymbolDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("不存在时应插入", func(t *testing.T) {
@@ -339,8 +341,8 @@ func TestSymbolDAO_Upsert(t *testing.T) {
 }
 
 func TestSymbolDAO_Delete(t *testing.T) {
-	db := setupTestDB(t)
-	dao := NewSymbolDAO(db)
+	db, logger := setupTestDB(t)
+	dao := NewSymbolDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("成功软删除交易对", func(t *testing.T) {
@@ -371,8 +373,8 @@ func TestSymbolDAO_Delete(t *testing.T) {
 }
 
 func TestSymbolDAO_WithSupportMarginCoins(t *testing.T) {
-	db := setupTestDB(t)
-	dao := NewSymbolDAO(db)
+	db, logger := setupTestDB(t)
+	dao := NewSymbolDAO(db, logger)
 	ctx := context.Background()
 
 	t.Run("支持保存和查询 support_margin_coins 数组", func(t *testing.T) {
