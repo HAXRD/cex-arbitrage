@@ -2,6 +2,11 @@ server:
   port: 8080
   mode: debug  # debug/release
 
+log:
+  level: debug    # debug, info, warn, error
+  format: json    # json, console
+  output: stdout  # stdout, stderr, file
+
 database:
   host: localhost
   port: 5432
