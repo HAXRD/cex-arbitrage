@@ -89,18 +89,18 @@
   - [x] 8.7 编写 Redis 连接测试
   - [x] 8.8 验证所有测试通过
 
-- [ ] 9. Redis 缓存操作实现
-  - [ ] 9.1 编写 PriceCache 单元测试（使用 miniredis 模拟）
-  - [ ] 9.2 实现 PriceCache 接口（Set, Get, GetMultiple, Delete）
-  - [ ] 9.3 实现 SetPrice 方法（缓存实时价格，Hash 结构，TTL 60秒）
-  - [ ] 9.4 实现 GetPrice 方法（获取单个交易对价格）
-  - [ ] 9.5 实现 GetMultiplePrices 方法（批量获取价格，使用 Pipeline）
-  - [ ] 9.6 实现 SetMetrics 方法（缓存实时指标）
-  - [ ] 9.7 实现 GetMetrics 方法（获取实时指标）
-  - [ ] 9.8 实现 SetActiveSymbols 方法（缓存活跃交易对列表，Set 结构）
-  - [ ] 9.9 实现 GetActiveSymbols 方法（获取活跃交易对列表）
-  - [ ] 9.10 验证所有单元测试通过
-  - [ ] 9.11 编写集成测试（真实 Redis）并验证通过
+- [x] 9. Redis 缓存操作实现 ✅ **已完成**
+  - [x] 9.1 编写 PriceCache 单元测试（使用 miniredis 模拟）
+  - [x] 9.2 实现 PriceCache 接口（Set, Get, GetMultiple, Delete）
+  - [x] 9.3 实现 SetPrice 方法（缓存实时价格，Hash 结构，TTL 60秒）
+  - [x] 9.4 实现 GetPrice 方法（获取单个交易对价格）
+  - [x] 9.5 实现 GetMultiplePrices 方法（批量获取价格，使用 Pipeline）
+  - [x] 9.6 实现 SetMetrics 方法（缓存实时指标）
+  - [x] 9.7 实现 GetMetrics 方法（获取实时指标）
+  - [x] 9.8 实现 SetActiveSymbols 方法（缓存活跃交易对列表，Set 结构）
+  - [x] 9.9 实现 GetActiveSymbols 方法（获取活跃交易对列表）
+  - [x] 9.10 验证所有单元测试通过
+  - [x] 9.11 编写集成测试（真实 Redis）并验证通过
 
 - [ ] 10. 读写分离配置（可选，开发环境暂不实现）
   - [ ] 10.1 安装 GORM dbresolver 插件（gorm.io/plugin/dbresolver）

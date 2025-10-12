@@ -20,18 +20,18 @@ import (
 
 // setupIntegrationDB 连接真实数据库（需要 Docker PostgreSQL 运行）
 func setupIntegrationDB(t *testing.T) *gorm.DB {
-	cfg := config.DatabaseConfig{
+	cfg := &config.DatabaseConfig{
 		Host:            "localhost",
 		Port:            5432,
 		User:            "postgres",
 		Password:        "postgres",
-		Database:        "cex_arbitrage_test",
+		DBName:          "cryptosignal",
 		MaxOpenConns:    10,
 		MaxIdleConns:    2,
-		ConnMaxLifetime: 1 * time.Hour,
+		ConnMaxLifetime: 3600,
 	}
 
-	db, err := database.Connect(&cfg)
+	db, err := database.Connect(cfg, nil)
 	require.NoError(t, err, "Failed to connect to database. Make sure PostgreSQL is running (docker-compose up -d)")
 
 	// 自动迁移

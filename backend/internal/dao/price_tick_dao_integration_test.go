@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/haxrd/cryptosignal-hunter/internal/config"
 	"github.com/haxrd/cryptosignal-hunter/internal/database"
 	"github.com/haxrd/cryptosignal-hunter/internal/models"
 	"github.com/stretchr/testify/assert"
@@ -18,13 +19,24 @@ import (
 
 // setupPriceTickIntegrationTestDB 创建集成测试数据库连接
 func setupPriceTickIntegrationTestDB(t *testing.T) *gorm.DB {
-	// 从环境变量读取数据库连接字符串
-	dsn := os.Getenv("TEST_DATABASE_URL")
-	if dsn == "" {
-		dsn = "host=localhost port=5432 user=postgres password=postgres dbname=cryptosignal_test sslmode=disable TimeZone=UTC"
+	// 从环境变量读取数据库连接信息
+	host := os.Getenv("TEST_DB_HOST")
+	if host == "" {
+		host = "localhost"
 	}
 
-	db, err := database.Connect(dsn)
+	cfg := &config.DatabaseConfig{
+		Host:            host,
+		Port:            5432,
+		User:            "postgres",
+		Password:        "postgres",
+		DBName:          "cryptosignal",
+		MaxOpenConns:    10,
+		MaxIdleConns:    5,
+		ConnMaxLifetime: 3600,
+	}
+
+	db, err := database.Connect(cfg, nil)
 	require.NoError(t, err)
 
 	// 清理测试数据
