@@ -68,16 +68,16 @@
   - [x] 6.9 验证所有单元测试通过
   - [x] 6.10 编写集成测试并验证通过
 
-- [ ] 7. TickerDAO 实现
-  - [ ] 7.1 编写 TickerDAO 单元测试
-  - [ ] 7.2 实现 TickerDAO 接口定义（Create, CreateBatch, GetByRange, GetLatest）
-  - [ ] 7.3 实现 Create 方法（插入单条 Ticker 数据）
-  - [ ] 7.4 实现 CreateBatch 方法（批量插入，优化写入性能）
-  - [ ] 7.5 实现 GetLatest 方法（查询指定交易对的最新 Ticker）
-  - [ ] 7.6 实现 GetByRange 方法（时间范围查询）
-  - [ ] 7.7 实现 GetLatestMultiple 方法（批量查询多个交易对的最新价格）
-  - [ ] 7.8 验证所有单元测试通过
-  - [ ] 7.9 编写集成测试并验证通过
+- [x] 7. TickerDAO 实现 ✅ **已完成**
+  - [x] 7.1 编写 TickerDAO 单元测试
+  - [x] 7.2 实现 TickerDAO 接口定义（Create, CreateBatch, GetByRange, GetLatest）
+  - [x] 7.3 实现 Create 方法（插入单条 Ticker 数据）
+  - [x] 7.4 实现 CreateBatch 方法（批量插入，优化写入性能）
+  - [x] 7.5 实现 GetLatest 方法（查询指定交易对的最新 Ticker）
+  - [x] 7.6 实现 GetByRange 方法（时间范围查询）
+  - [x] 7.7 实现 GetLatestMultiple 方法（批量查询多个交易对的最新价格）
+  - [x] 7.8 验证所有单元测试通过
+  - [x] 7.9 编写集成测试并验证通过
 
 - [ ] 8. Redis 缓存基础架构
   - [ ] 8.1 配置 Docker Compose 添加 Redis 7+（设置内存限制、淘汰策略）
