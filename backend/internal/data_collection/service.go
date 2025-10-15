@@ -184,47 +184,61 @@ func (s *DataCollectionServiceImpl) GetStatus() *ServiceStatus {
 }
 
 // HealthCheck 健康检查
-func (s *DataCollectionServiceImpl) HealthCheck() *HealthStatus {
+func (s *DataCollectionServiceImpl) HealthCheck() *HealthCheck {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	health := &HealthStatus{
+	// 基础健康检查
+	serviceCheck := &HealthCheck{
+		Name:      "service_state",
+		Status:    HealthStatus(s.getHealthStatus()),
+		Message:   "服务状态检查",
 		Timestamp: time.Now(),
-		Details:   make(map[string]interface{}),
-		Checks:    []HealthCheck{},
+		Duration:  0,
+		Metadata:  make(map[string]interface{}),
 	}
 
-	// 基础健康检查
-	health.Checks = append(health.Checks, HealthCheck{
-		Name:     "service_state",
-		Status:   s.getHealthStatus(),
-		Duration: 0,
-	})
-
 	// 连接健康检查
-	health.Checks = append(health.Checks, HealthCheck{
-		Name:     "connections",
-		Status:   s.checkConnectionsHealth(),
-		Duration: 0,
-	})
+	connectionCheck := &HealthCheck{
+		Name:      "connections",
+		Status:    HealthStatus(s.checkConnectionsHealth()),
+		Message:   "连接状态检查",
+		Timestamp: time.Now(),
+		Duration:  0,
+		Metadata:  make(map[string]interface{}),
+	}
 
 	// 数据采集健康检查
-	health.Checks = append(health.Checks, HealthCheck{
-		Name:     "data_collection",
-		Status:   s.checkDataCollectionHealth(),
-		Duration: 0,
-	})
+	dataCollectionCheck := &HealthCheck{
+		Name:      "data_collection",
+		Status:    HealthStatus(s.checkDataCollectionHealth()),
+		Message:   "数据采集状态检查",
+		Timestamp: time.Now(),
+		Duration:  0,
+		Metadata:  make(map[string]interface{}),
+	}
 
-	// 设置整体健康状态
-	health.Status = s.getOverallHealthStatus(health.Checks)
-	health.IsHealthy = health.Status == HealthStatusHealthy
+	// 确定整体健康状态
+	overallStatus := s.getOverallHealthStatus([]*HealthCheck{serviceCheck, connectionCheck, dataCollectionCheck})
 
+	health := &HealthCheck{
+		Name:      "overall",
+		Status:    overallStatus,
+		Message:   "整体健康状态",
+		Timestamp: time.Now(),
+		Duration:  0,
+		Metadata: map[string]interface{}{
+			"service_check":         serviceCheck,
+			"connection_check":      connectionCheck,
+			"data_collection_check": dataCollectionCheck,
+		},
+	}
 	// 设置详细信息
-	health.Details["state"] = s.state
-	health.Details["uptime"] = time.Since(s.startTime).String()
-	health.Details["active_connections"] = atomic.LoadInt32(&s.activeConnections)
-	health.Details["total_collections"] = atomic.LoadInt64(&s.totalCollections)
-	health.Details["error_rate"] = s.getErrorRate()
+	health.Metadata["state"] = s.state
+	health.Metadata["uptime"] = time.Since(s.startTime).String()
+	health.Metadata["active_connections"] = atomic.LoadInt32(&s.activeConnections)
+	health.Metadata["total_collections"] = atomic.LoadInt64(&s.totalCollections)
+	health.Metadata["error_rate"] = s.getErrorRate()
 
 	return health
 }
@@ -397,13 +411,13 @@ func (s *DataCollectionServiceImpl) handleEvent(event DataCollectionEvent) {
 func (s *DataCollectionServiceImpl) getHealthStatus() string {
 	switch s.state {
 	case StateRunning:
-		return HealthStatusHealthy
+		return string(HealthStatusHealthy)
 	case StateStopped:
-		return HealthStatusUnhealthy
+		return string(HealthStatusUnhealthy)
 	case StateError:
-		return HealthStatusUnhealthy
+		return string(HealthStatusUnhealthy)
 	default:
-		return HealthStatusDegraded
+		return string(HealthStatusDegraded)
 	}
 }
 
@@ -411,29 +425,29 @@ func (s *DataCollectionServiceImpl) getHealthStatus() string {
 func (s *DataCollectionServiceImpl) checkConnectionsHealth() string {
 	activeConnections := atomic.LoadInt32(&s.activeConnections)
 	if activeConnections > 0 {
-		return HealthStatusHealthy
+		return string(HealthStatusHealthy)
 	}
 	// 如果没有活跃连接，检查服务是否刚启动
 	if s.state == StateRunning && time.Since(s.startTime) < 5*time.Second {
 		// 服务刚启动，给一些时间建立连接
-		return HealthStatusDegraded
+		return string(HealthStatusDegraded)
 	}
-	return HealthStatusUnhealthy
+	return string(HealthStatusUnhealthy)
 }
 
 // checkDataCollectionHealth 检查数据采集健康状态
 func (s *DataCollectionServiceImpl) checkDataCollectionHealth() string {
 	errorRate := s.getErrorRate()
 	if errorRate < 0.1 { // 错误率小于10%
-		return HealthStatusHealthy
+		return string(HealthStatusHealthy)
 	} else if errorRate < 0.3 { // 错误率小于30%
-		return HealthStatusDegraded
+		return string(HealthStatusDegraded)
 	}
-	return HealthStatusUnhealthy
+	return string(HealthStatusUnhealthy)
 }
 
 // getOverallHealthStatus 获取整体健康状态
-func (s *DataCollectionServiceImpl) getOverallHealthStatus(checks []HealthCheck) string {
+func (s *DataCollectionServiceImpl) getOverallHealthStatus(checks []*HealthCheck) HealthStatus {
 	healthyCount := 0
 	totalCount := len(checks)
 

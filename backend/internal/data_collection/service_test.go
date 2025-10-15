@@ -66,8 +66,7 @@ func TestDataCollectionService_HealthCheck(t *testing.T) {
 
 	// 测试停止状态下的健康检查
 	health := service.HealthCheck()
-	assert.Equal(t, "unhealthy", health.Status, "停止状态下应该是不健康")
-	assert.False(t, health.IsHealthy, "停止状态下应该是不健康")
+	assert.Equal(t, HealthStatusUnhealthy, health.Status, "停止状态下应该是不健康")
 
 	// 启动服务
 	err := service.Start(context.Background())
@@ -76,13 +75,7 @@ func TestDataCollectionService_HealthCheck(t *testing.T) {
 	// 测试运行状态下的健康检查
 	health = service.HealthCheck()
 	// 服务刚启动时可能还没有建立连接，所以状态可能是degraded
-	assert.Contains(t, []string{"healthy", "degraded"}, health.Status, "运行状态下应该是healthy或degraded")
-	// 对于刚启动的服务，degraded状态也是可以接受的
-	if health.Status == "degraded" {
-		assert.False(t, health.IsHealthy, "degraded状态下应该是不健康")
-	} else {
-		assert.True(t, health.IsHealthy, "healthy状态下应该是健康")
-	}
+	assert.Contains(t, []HealthStatus{HealthStatusHealthy, HealthStatusDegraded}, health.Status, "运行状态下应该是healthy或degraded")
 }
 
 func TestDataCollectionService_ConcurrentStartStop(t *testing.T) {

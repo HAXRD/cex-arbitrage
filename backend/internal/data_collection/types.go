@@ -82,21 +82,7 @@ type ServiceStatus struct {
 }
 
 // HealthStatus 健康检查状态
-type HealthStatus struct {
-	Status    string                 `json:"status"`
-	IsHealthy bool                   `json:"is_healthy"`
-	Timestamp time.Time              `json:"timestamp"`
-	Details   map[string]interface{} `json:"details"`
-	Checks    []HealthCheck          `json:"checks"`
-}
-
-// HealthCheck 健康检查项
-type HealthCheck struct {
-	Name     string        `json:"name"`
-	Status   string        `json:"status"`
-	Message  string        `json:"message,omitempty"`
-	Duration time.Duration `json:"duration"`
-}
+// 注意：HealthStatus和HealthCheck类型已在monitoring_types.go中定义
 
 // ServiceMetrics 服务指标
 type ServiceMetrics struct {
@@ -173,12 +159,7 @@ const (
 	StateError    = "error"
 )
 
-// 健康状态常量
-const (
-	HealthStatusHealthy   = "healthy"
-	HealthStatusUnhealthy = "unhealthy"
-	HealthStatusDegraded  = "degraded"
-)
+// 注意：健康状态常量已在monitoring_types.go中定义
 
 // 事件类型常量
 const (
