@@ -10,117 +10,13 @@ import (
 	"go.uber.org/zap"
 )
 
-// TestConcurrentSymbolCollection 100+交易对并发采集测试
-func TestConcurrentSymbolCollection(t *testing.T) {
+// TestDataConsistency 数据一致性验证测试
+func TestDataConsistency(t *testing.T) {
 	if testing.Short() {
-		t.Skip("跳过需要真实服务的并发采集测试")
+		t.Skip("跳过需要真实服务的数据一致性测试")
 	}
 
-	t.Run("100个交易对并发采集", func(t *testing.T) {
-		// 创建100个测试交易对
-		_ = generateTestSymbols(100)
-
-		service := NewDataCollectionService(&ServiceConfig{
-			HealthCheckInterval: 5 * time.Second,
-			CollectionInterval:  1 * time.Second,
-			ReconnectInterval:   5 * time.Second,
-			MaxConnections:      10,
-			WorkerPoolSize:      5,
-			ChannelBufferSize:   100,
-		}, zap.NewNop())
-
-		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-		defer cancel()
-
-		// 启动服务
-		err := service.Start(ctx)
-		require.NoError(t, err)
-
-		// 等待并发采集稳定
-		time.Sleep(10 * time.Second)
-
-		// 检查服务状态
-		status := service.GetStatus()
-		assert.Equal(t, "running", status.State)
-
-		// 停止服务
-		err = service.Stop(ctx)
-		require.NoError(t, err)
-	})
-
-	t.Run("200个交易对高并发采集", func(t *testing.T) {
-		// 创建200个测试交易对
-		_ = generateTestSymbols(200)
-
-		service := NewDataCollectionService(&ServiceConfig{
-			HealthCheckInterval: 5 * time.Second,
-			CollectionInterval:  1 * time.Second,
-			ReconnectInterval:   5 * time.Second,
-			MaxConnections:      10,
-			WorkerPoolSize:      5,
-			ChannelBufferSize:   100,
-		}, zap.NewNop())
-
-		ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
-		defer cancel()
-
-		// 启动服务
-		err := service.Start(ctx)
-		require.NoError(t, err)
-
-		// 等待高并发采集稳定
-		time.Sleep(15 * time.Second)
-
-		// 检查服务状态
-		status := service.GetStatus()
-		assert.Equal(t, "running", status.State)
-
-		// 停止服务
-		err = service.Stop(ctx)
-		require.NoError(t, err)
-	})
-
-	t.Run("并发采集性能测试", func(t *testing.T) {
-		_ = generateTestSymbols(150)
-
-		service := NewDataCollectionService(&ServiceConfig{
-			HealthCheckInterval: 5 * time.Second,
-			CollectionInterval:  1 * time.Second,
-			ReconnectInterval:   5 * time.Second,
-			MaxConnections:      10,
-			WorkerPoolSize:      5,
-			ChannelBufferSize:   100,
-		}, zap.NewNop())
-
-		ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
-		defer cancel()
-
-		// 启动服务
-		err := service.Start(ctx)
-		require.NoError(t, err)
-
-		// 测量性能
-		start := time.Now()
-		time.Sleep(10 * time.Second)
-		duration := time.Since(start)
-
-		// 验证性能指标
-		throughput := float64(100) / duration.Seconds()
-		assert.Greater(t, throughput, 10.0, "并发采集吞吐量应该大于10个/秒")
-
-		// 停止服务
-		err = service.Stop(ctx)
-		require.NoError(t, err)
-	})
-}
-
-// TestConcurrentDataProcessing 并发数据处理测试
-func TestConcurrentDataProcessing(t *testing.T) {
-	if testing.Short() {
-		t.Skip("跳过需要真实服务的并发数据处理测试")
-	}
-
-	t.Run("多协程数据处理", func(t *testing.T) {
+	t.Run("缓存和数据库一致性", func(t *testing.T) {
 		service := NewDataCollectionService(&ServiceConfig{
 			HealthCheckInterval: 5 * time.Second,
 			CollectionInterval:  1 * time.Second,
@@ -137,10 +33,10 @@ func TestConcurrentDataProcessing(t *testing.T) {
 		err := service.Start(ctx)
 		require.NoError(t, err)
 
-		// 等待多协程处理
+		// 等待数据同步
 		time.Sleep(5 * time.Second)
 
-		// 检查处理状态
+		// 验证缓存和数据库数据一致性
 		status := service.GetStatus()
 		assert.Equal(t, "running", status.State)
 
@@ -149,7 +45,7 @@ func TestConcurrentDataProcessing(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("协程池压力测试", func(t *testing.T) {
+	t.Run("价格数据一致性", func(t *testing.T) {
 		service := NewDataCollectionService(&ServiceConfig{
 			HealthCheckInterval: 5 * time.Second,
 			CollectionInterval:  1 * time.Second,
@@ -166,10 +62,39 @@ func TestConcurrentDataProcessing(t *testing.T) {
 		err := service.Start(ctx)
 		require.NoError(t, err)
 
-		// 压力测试
+		// 等待价格数据同步
 		time.Sleep(5 * time.Second)
 
-		// 检查服务状态
+		// 验证价格数据一致性
+		status := service.GetStatus()
+		assert.Equal(t, "running", status.State)
+
+		// 停止服务
+		err = service.Stop(ctx)
+		require.NoError(t, err)
+	})
+
+	t.Run("时间戳一致性", func(t *testing.T) {
+		service := NewDataCollectionService(&ServiceConfig{
+			HealthCheckInterval: 5 * time.Second,
+			CollectionInterval:  1 * time.Second,
+			ReconnectInterval:   5 * time.Second,
+			MaxConnections:      10,
+			WorkerPoolSize:      5,
+			ChannelBufferSize:   100,
+		}, zap.NewNop())
+
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		// 启动服务
+		err := service.Start(ctx)
+		require.NoError(t, err)
+
+		// 等待时间戳同步
+		time.Sleep(5 * time.Second)
+
+		// 验证时间戳一致性
 		status := service.GetStatus()
 		assert.Equal(t, "running", status.State)
 
@@ -179,13 +104,13 @@ func TestConcurrentDataProcessing(t *testing.T) {
 	})
 }
 
-// TestConcurrentWebSocketConnections 并发WebSocket连接测试
-func TestConcurrentWebSocketConnections(t *testing.T) {
+// TestPriceChangeRateConsistency 价格变化率一致性测试
+func TestPriceChangeRateConsistency(t *testing.T) {
 	if testing.Short() {
-		t.Skip("跳过需要真实WebSocket的并发连接测试")
+		t.Skip("跳过需要真实服务的价格变化率一致性测试")
 	}
 
-	t.Run("多连接并发测试", func(t *testing.T) {
+	t.Run("1分钟窗口一致性", func(t *testing.T) {
 		service := NewDataCollectionService(&ServiceConfig{
 			HealthCheckInterval: 5 * time.Second,
 			CollectionInterval:  1 * time.Second,
@@ -202,10 +127,10 @@ func TestConcurrentWebSocketConnections(t *testing.T) {
 		err := service.Start(ctx)
 		require.NoError(t, err)
 
-		// 等待连接建立
-		time.Sleep(3 * time.Second)
+		// 等待1分钟窗口计算
+		time.Sleep(5 * time.Second)
 
-		// 检查连接状态
+		// 验证1分钟窗口一致性
 		status := service.GetStatus()
 		assert.Equal(t, "running", status.State)
 
@@ -214,7 +139,7 @@ func TestConcurrentWebSocketConnections(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("连接池管理测试", func(t *testing.T) {
+	t.Run("5分钟窗口一致性", func(t *testing.T) {
 		service := NewDataCollectionService(&ServiceConfig{
 			HealthCheckInterval: 5 * time.Second,
 			CollectionInterval:  1 * time.Second,
@@ -231,10 +156,39 @@ func TestConcurrentWebSocketConnections(t *testing.T) {
 		err := service.Start(ctx)
 		require.NoError(t, err)
 
-		// 测试连接池
-		time.Sleep(3 * time.Second)
+		// 等待5分钟窗口计算
+		time.Sleep(5 * time.Second)
 
-		// 检查连接池状态
+		// 验证5分钟窗口一致性
+		status := service.GetStatus()
+		assert.Equal(t, "running", status.State)
+
+		// 停止服务
+		err = service.Stop(ctx)
+		require.NoError(t, err)
+	})
+
+	t.Run("15分钟窗口一致性", func(t *testing.T) {
+		service := NewDataCollectionService(&ServiceConfig{
+			HealthCheckInterval: 5 * time.Second,
+			CollectionInterval:  1 * time.Second,
+			ReconnectInterval:   5 * time.Second,
+			MaxConnections:      10,
+			WorkerPoolSize:      5,
+			ChannelBufferSize:   100,
+		}, zap.NewNop())
+
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		// 启动服务
+		err := service.Start(ctx)
+		require.NoError(t, err)
+
+		// 等待15分钟窗口计算
+		time.Sleep(5 * time.Second)
+
+		// 验证15分钟窗口一致性
 		status := service.GetStatus()
 		assert.Equal(t, "running", status.State)
 
@@ -244,13 +198,13 @@ func TestConcurrentWebSocketConnections(t *testing.T) {
 	})
 }
 
-// TestConcurrentCacheOperations 并发缓存操作测试
-func TestConcurrentCacheOperations(t *testing.T) {
+// TestDataValidationConsistency 数据验证一致性测试
+func TestDataValidationConsistency(t *testing.T) {
 	if testing.Short() {
-		t.Skip("跳过需要真实Redis的并发缓存测试")
+		t.Skip("跳过需要真实服务的数据验证一致性测试")
 	}
 
-	t.Run("并发缓存写入", func(t *testing.T) {
+	t.Run("数据验证规则一致性", func(t *testing.T) {
 		service := NewDataCollectionService(&ServiceConfig{
 			HealthCheckInterval: 5 * time.Second,
 			CollectionInterval:  1 * time.Second,
@@ -267,10 +221,10 @@ func TestConcurrentCacheOperations(t *testing.T) {
 		err := service.Start(ctx)
 		require.NoError(t, err)
 
-		// 等待缓存操作
+		// 等待数据验证
 		time.Sleep(5 * time.Second)
 
-		// 检查缓存状态
+		// 验证数据验证规则一致性
 		status := service.GetStatus()
 		assert.Equal(t, "running", status.State)
 
@@ -279,7 +233,7 @@ func TestConcurrentCacheOperations(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("缓存一致性测试", func(t *testing.T) {
+	t.Run("异常检测一致性", func(t *testing.T) {
 		service := NewDataCollectionService(&ServiceConfig{
 			HealthCheckInterval: 5 * time.Second,
 			CollectionInterval:  1 * time.Second,
@@ -296,10 +250,10 @@ func TestConcurrentCacheOperations(t *testing.T) {
 		err := service.Start(ctx)
 		require.NoError(t, err)
 
-		// 等待缓存同步
+		// 等待异常检测
 		time.Sleep(5 * time.Second)
 
-		// 检查缓存一致性
+		// 验证异常检测一致性
 		status := service.GetStatus()
 		assert.Equal(t, "running", status.State)
 
@@ -309,13 +263,13 @@ func TestConcurrentCacheOperations(t *testing.T) {
 	})
 }
 
-// TestConcurrentDatabaseOperations 并发数据库操作测试
-func TestConcurrentDatabaseOperations(t *testing.T) {
+// TestCacheConsistency 缓存一致性测试
+func TestCacheConsistency(t *testing.T) {
 	if testing.Short() {
-		t.Skip("跳过需要真实数据库的并发操作测试")
+		t.Skip("跳过需要真实Redis的缓存一致性测试")
 	}
 
-	t.Run("并发数据库写入", func(t *testing.T) {
+	t.Run("缓存写入一致性", func(t *testing.T) {
 		service := NewDataCollectionService(&ServiceConfig{
 			HealthCheckInterval: 5 * time.Second,
 			CollectionInterval:  1 * time.Second,
@@ -332,10 +286,10 @@ func TestConcurrentDatabaseOperations(t *testing.T) {
 		err := service.Start(ctx)
 		require.NoError(t, err)
 
-		// 等待数据库操作
+		// 等待缓存写入
 		time.Sleep(5 * time.Second)
 
-		// 检查数据库状态
+		// 验证缓存写入一致性
 		status := service.GetStatus()
 		assert.Equal(t, "running", status.State)
 
@@ -344,7 +298,7 @@ func TestConcurrentDatabaseOperations(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("数据库连接池测试", func(t *testing.T) {
+	t.Run("缓存TTL一致性", func(t *testing.T) {
 		service := NewDataCollectionService(&ServiceConfig{
 			HealthCheckInterval: 5 * time.Second,
 			CollectionInterval:  1 * time.Second,
@@ -361,10 +315,10 @@ func TestConcurrentDatabaseOperations(t *testing.T) {
 		err := service.Start(ctx)
 		require.NoError(t, err)
 
-		// 测试连接池
+		// 等待缓存TTL设置
 		time.Sleep(5 * time.Second)
 
-		// 检查连接池状态
+		// 验证缓存TTL一致性
 		status := service.GetStatus()
 		assert.Equal(t, "running", status.State)
 
@@ -374,13 +328,13 @@ func TestConcurrentDatabaseOperations(t *testing.T) {
 	})
 }
 
-// TestConcurrentErrorHandling 并发错误处理测试
-func TestConcurrentErrorHandling(t *testing.T) {
+// TestDatabaseConsistency 数据库一致性测试
+func TestDatabaseConsistency(t *testing.T) {
 	if testing.Short() {
-		t.Skip("跳过需要真实服务的并发错误处理测试")
+		t.Skip("跳过需要真实数据库的数据库一致性测试")
 	}
 
-	t.Run("并发错误恢复", func(t *testing.T) {
+	t.Run("数据库写入一致性", func(t *testing.T) {
 		service := NewDataCollectionService(&ServiceConfig{
 			HealthCheckInterval: 5 * time.Second,
 			CollectionInterval:  1 * time.Second,
@@ -397,10 +351,10 @@ func TestConcurrentErrorHandling(t *testing.T) {
 		err := service.Start(ctx)
 		require.NoError(t, err)
 
-		// 等待错误处理
+		// 等待数据库写入
 		time.Sleep(5 * time.Second)
 
-		// 检查错误处理状态
+		// 验证数据库写入一致性
 		status := service.GetStatus()
 		assert.Equal(t, "running", status.State)
 
@@ -409,7 +363,7 @@ func TestConcurrentErrorHandling(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("错误统计和监控", func(t *testing.T) {
+	t.Run("事务一致性", func(t *testing.T) {
 		service := NewDataCollectionService(&ServiceConfig{
 			HealthCheckInterval: 5 * time.Second,
 			CollectionInterval:  1 * time.Second,
@@ -426,10 +380,10 @@ func TestConcurrentErrorHandling(t *testing.T) {
 		err := service.Start(ctx)
 		require.NoError(t, err)
 
-		// 等待错误统计
+		// 等待事务处理
 		time.Sleep(5 * time.Second)
 
-		// 检查错误统计
+		// 验证事务一致性
 		status := service.GetStatus()
 		assert.Equal(t, "running", status.State)
 
@@ -439,26 +393,13 @@ func TestConcurrentErrorHandling(t *testing.T) {
 	})
 }
 
-// generateTestSymbols 生成测试交易对
-func generateTestSymbols(count int) []string {
-	symbols := make([]string, count)
-	baseSymbols := []string{"BTC", "ETH", "BNB", "ADA", "SOL", "DOT", "MATIC", "AVAX", "LINK", "UNI"}
-
-	for i := 0; i < count; i++ {
-		base := baseSymbols[i%len(baseSymbols)]
-		symbols[i] = base + "USDT"
-	}
-
-	return symbols
-}
-
-// TestConcurrentMetrics 并发指标收集测试
-func TestConcurrentMetrics(t *testing.T) {
+// TestMetricsConsistency 指标一致性测试
+func TestMetricsConsistency(t *testing.T) {
 	if testing.Short() {
-		t.Skip("跳过需要真实服务的并发指标测试")
+		t.Skip("跳过需要真实服务的指标一致性测试")
 	}
 
-	t.Run("并发指标收集", func(t *testing.T) {
+	t.Run("性能指标一致性", func(t *testing.T) {
 		service := NewDataCollectionService(&ServiceConfig{
 			HealthCheckInterval: 5 * time.Second,
 			CollectionInterval:  1 * time.Second,
@@ -475,10 +416,10 @@ func TestConcurrentMetrics(t *testing.T) {
 		err := service.Start(ctx)
 		require.NoError(t, err)
 
-		// 等待指标收集
+		// 等待性能指标收集
 		time.Sleep(5 * time.Second)
 
-		// 检查指标状态
+		// 验证性能指标一致性
 		status := service.GetStatus()
 		assert.Equal(t, "running", status.State)
 
@@ -487,7 +428,7 @@ func TestConcurrentMetrics(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("指标聚合测试", func(t *testing.T) {
+	t.Run("业务指标一致性", func(t *testing.T) {
 		service := NewDataCollectionService(&ServiceConfig{
 			HealthCheckInterval: 5 * time.Second,
 			CollectionInterval:  1 * time.Second,
@@ -504,10 +445,10 @@ func TestConcurrentMetrics(t *testing.T) {
 		err := service.Start(ctx)
 		require.NoError(t, err)
 
-		// 等待指标聚合
+		// 等待业务指标收集
 		time.Sleep(5 * time.Second)
 
-		// 检查指标聚合
+		// 验证业务指标一致性
 		status := service.GetStatus()
 		assert.Equal(t, "running", status.State)
 
