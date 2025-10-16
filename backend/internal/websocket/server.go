@@ -381,6 +381,22 @@ func (s *WebSocketServerImpl) GetSubscriptions(connID string) []string {
 	return conn.Subscriptions
 }
 
+// GetSubscribers 获取交易对的订阅者列表
+func (s *WebSocketServerImpl) GetSubscribers(symbol string) []string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	subscribers, exists := s.subscriptions[symbol]
+	if !exists {
+		return nil
+	}
+
+	// 返回副本，避免外部修改
+	result := make([]string, len(subscribers))
+	copy(result, subscribers)
+	return result
+}
+
 // 辅助方法
 
 func (s *WebSocketServerImpl) addConnection(conn *Connection) {

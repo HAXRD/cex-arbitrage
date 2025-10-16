@@ -72,8 +72,8 @@ func TestWebSocketServer_MessageHandling(t *testing.T) {
 	assert.Contains(t, connections[0].Subscriptions, "ETHUSDT")
 }
 
-// TestWebSocketServer_ErrorHandling 测试错误处理
-func TestWebSocketServer_ErrorHandling(t *testing.T) {
+// TestWebSocketServer_InvalidMessageHandling 测试无效消息处理
+func TestWebSocketServer_InvalidMessageHandling(t *testing.T) {
 	server := NewWebSocketServer(DefaultServerConfig(), zap.NewNop())
 	require.NotNil(t, server)
 

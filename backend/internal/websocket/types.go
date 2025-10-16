@@ -27,6 +27,7 @@ type WebSocketServer interface {
 	Subscribe(connID string, symbols []string) error
 	Unsubscribe(connID string, symbols []string) error
 	GetSubscriptions(connID string) []string
+	GetSubscribers(symbol string) []string
 }
 
 // Connection WebSocket连接
