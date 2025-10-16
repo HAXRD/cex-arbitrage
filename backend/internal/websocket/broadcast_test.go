@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 type MockConnectionManager struct {
 	connections   map[string]*Connection
 	subscriptions map[string][]string
+	mu            sync.RWMutex
 }
 
 func NewMockConnectionManager() *MockConnectionManager {
@@ -24,6 +26,8 @@ func NewMockConnectionManager() *MockConnectionManager {
 }
 
 func (m *MockConnectionManager) GetConnections() []*Connection {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	connections := make([]*Connection, 0, len(m.connections))
 	for _, conn := range m.connections {
 		connections = append(connections, conn)
@@ -32,6 +36,8 @@ func (m *MockConnectionManager) GetConnections() []*Connection {
 }
 
 func (m *MockConnectionManager) GetSubscribers(symbol string) []string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	subscribers, exists := m.subscriptions[symbol]
 	if !exists {
 		return nil
@@ -40,12 +46,16 @@ func (m *MockConnectionManager) GetSubscribers(symbol string) []string {
 }
 
 func (m *MockConnectionManager) IsConnectionActive(connID string) bool {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	conn, exists := m.connections[connID]
 	return exists && conn.IsActive
 }
 
 func (m *MockConnectionManager) SendToConnection(connID string, message interface{}) error {
+	m.mu.RLock()
 	conn, exists := m.connections[connID]
+	m.mu.RUnlock()
 	if !exists {
 		return &BroadcastError{
 			Type:    "CONNECTION_NOT_FOUND",
@@ -64,6 +74,8 @@ func (m *MockConnectionManager) SendToConnection(connID string, message interfac
 }
 
 func (m *MockConnectionManager) AddConnection(connID string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.connections[connID] = &Connection{
 		ID:            connID,
 		IsActive:      true,
@@ -74,10 +86,14 @@ func (m *MockConnectionManager) AddConnection(connID string) {
 }
 
 func (m *MockConnectionManager) RemoveConnection(connID string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	delete(m.connections, connID)
 }
 
 func (m *MockConnectionManager) AddSubscription(connID, symbol string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if m.subscriptions[symbol] == nil {
 		m.subscriptions[symbol] = make([]string, 0)
 	}
