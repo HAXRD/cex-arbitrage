@@ -167,6 +167,16 @@ func (dao *MonitoringConfigDAO) Update(config *models.MonitoringConfig) error {
 		return err
 	}
 
+	// 检查配置是否存在
+	var existingConfig models.MonitoringConfig
+	if err := dao.db.First(&existingConfig, config.ID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &NotFoundError{Resource: "monitoring_config", ID: config.ID}
+		}
+		dao.logger.Error("检查配置是否存在失败", zap.Error(err))
+		return err
+	}
+
 	// 检查名称唯一性（排除自己）
 	var count int64
 	if err := dao.db.Model(&models.MonitoringConfig{}).Where("name = ? AND id != ?", config.Name, config.ID).Count(&count).Error; err != nil {
