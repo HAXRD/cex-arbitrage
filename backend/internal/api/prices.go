@@ -75,12 +75,29 @@ func (h *PriceHandler) GetBatchPrices(c *gin.Context) {
 	symbols := c.QueryArray("symbols")
 	format := c.DefaultQuery("format", "json")
 
-	if len(symbols) == 0 {
+	// 过滤空字符串
+	var validSymbols []string
+	for _, symbol := range symbols {
+		if symbol != "" {
+			validSymbols = append(validSymbols, symbol)
+		}
+	}
+
+	h.logger.Info("过滤后的交易对",
+		zap.Strings("original", symbols),
+		zap.Strings("filtered", validSymbols),
+		zap.Int("original_count", len(symbols)),
+		zap.Int("filtered_count", len(validSymbols)),
+	)
+
+	if len(validSymbols) == 0 {
 		BadRequestResponse(c, "缺少交易对参数", map[string]interface{}{
 			"required": "symbols",
 		})
 		return
 	}
+
+	symbols = validSymbols
 
 	// 验证交易对格式
 	for _, symbol := range symbols {
@@ -191,8 +208,8 @@ func (h *PriceHandler) GetPriceStatistics(c *gin.Context) {
 	endTime := time.Now()
 	startTime := h.calculateStartTime(period, endTime)
 
-	// 查询价格统计（简化实现）
-	prices, err := h.priceDAO.GetByRange(ctx, symbol, startTime, endTime, 1000, 0)
+	// 查询价格统计（限制为DAO允许的最大值200）
+	prices, err := h.priceDAO.GetByRange(ctx, symbol, startTime, endTime, 200, 0)
 	if err != nil {
 		h.logger.Error("获取价格统计信息失败",
 			zap.String("symbol", symbol),

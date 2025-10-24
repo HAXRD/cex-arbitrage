@@ -143,22 +143,35 @@ func TestPricesAPI_Integration(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/api/v1/prices/BTCUSDT/statistics?period=24h", nil)
 		router.ServeHTTP(w, req)
 
+		// 打印实际响应以便调试
+		if w.Code != http.StatusOK {
+			t.Logf("Response body: %s", w.Body.String())
+		}
+
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		var response APIResponse
 		err := json.Unmarshal(w.Body.Bytes(), &response)
 		require.NoError(t, err)
+		
+		// 如果失败，打印详细信息
+		if !response.Success {
+			t.Logf("Response: %+v", response)
+		}
+		
 		assert.True(t, response.Success)
 		assert.Equal(t, "获取价格统计信息成功", response.Message)
-		assert.NotNil(t, response.Data)
-
-		// 验证统计信息
-		data := response.Data.(map[string]interface{})
-		assert.Equal(t, "BTCUSDT", data["symbol"])
-		assert.Equal(t, "24h", data["period"])
-		assert.NotNil(t, data["current_price"])
-		assert.NotNil(t, data["highest_price"])
-		assert.NotNil(t, data["lowest_price"])
+		
+		// 只在Data不为nil时进行转换
+		if assert.NotNil(t, response.Data) {
+			// 验证统计信息
+			data := response.Data.(map[string]interface{})
+			assert.Equal(t, "BTCUSDT", data["symbol"])
+			assert.Equal(t, "24h", data["period"])
+			assert.NotNil(t, data["current_price"])
+			assert.NotNil(t, data["highest_price"])
+			assert.NotNil(t, data["lowest_price"])
+		}
 	})
 }
 
@@ -291,25 +304,38 @@ func TestPricesAPI_BatchIntegration(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/api/v1/prices/batch/optimized?symbols=BTCUSDT&symbols=ETHUSDT&symbols=ADAUSDT&parallel=true", nil)
 		router.ServeHTTP(w, req)
 
+		// 打印实际响应以便调试
+		if w.Code != http.StatusOK {
+			t.Logf("Response body: %s", w.Body.String())
+		}
+
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		var response APIResponse
 		err := json.Unmarshal(w.Body.Bytes(), &response)
 		require.NoError(t, err)
+		
+		// 如果失败，打印详细信息
+		if !response.Success {
+			t.Logf("Response: %+v", response)
+		}
+		
 		assert.True(t, response.Success)
 		assert.Equal(t, "获取优化的批量价格成功", response.Message)
-		assert.NotNil(t, response.Data)
+		
+		// 只在Data不为nil时进行转换
+		if assert.NotNil(t, response.Data) {
+			// 验证响应数据
+			data := response.Data.(map[string]interface{})
+			assert.NotNil(t, data["prices"])
+			assert.NotNil(t, data["stats"])
 
-		// 验证响应数据
-		data := response.Data.(map[string]interface{})
-		assert.NotNil(t, data["prices"])
-		assert.NotNil(t, data["stats"])
-
-		stats := data["stats"].(map[string]interface{})
-		assert.NotNil(t, stats["query_time"])
-		assert.NotNil(t, stats["symbol_count"])
-		assert.NotNil(t, stats["result_count"])
-		assert.NotNil(t, stats["parallel"])
+			stats := data["stats"].(map[string]interface{})
+			assert.NotNil(t, stats["query_time"])
+			assert.NotNil(t, stats["symbol_count"])
+			assert.NotNil(t, stats["result_count"])
+			assert.NotNil(t, stats["parallel"])
+		}
 	})
 
 	t.Run("带筛选的批量价格查询测试", func(t *testing.T) {

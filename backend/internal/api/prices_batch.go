@@ -325,6 +325,8 @@ func (h *BatchPriceHandler) getBatchPricesParallel(ctx context.Context, symbols 
 	var allPrices []*models.PriceTick
 	var mu sync.Mutex
 	var wg sync.WaitGroup
+	var errors []error
+	var errorsMu sync.Mutex
 
 	for _, chunk := range chunks {
 		wg.Add(1)
@@ -332,18 +334,23 @@ func (h *BatchPriceHandler) getBatchPricesParallel(ctx context.Context, symbols 
 			defer wg.Done()
 
 			var chunkPrices []*models.PriceTick
-			var err error
 
 			if useCache {
-				chunkPrices, _, err = h.getBatchPricesFromCache(ctx, symbolChunk)
-				if err != nil {
-					// 缓存失败，从数据库获取
+				cachedPrices, allCached, err := h.getBatchPricesFromCache(ctx, symbolChunk)
+				if err == nil && allCached {
+					// 所有数据都在缓存中
+					chunkPrices = cachedPrices
+				} else {
+					// 部分或全部数据不在缓存中，从数据库获取
 					priceMap, err := h.priceDAO.GetLatestMultiple(ctx, symbolChunk)
 					if err != nil {
 						h.logger.Error("并行获取价格失败",
 							zap.Strings("symbols", symbolChunk),
 							zap.Error(err),
 						)
+						errorsMu.Lock()
+						errors = append(errors, err)
+						errorsMu.Unlock()
 						return
 					}
 
@@ -361,6 +368,9 @@ func (h *BatchPriceHandler) getBatchPricesParallel(ctx context.Context, symbols 
 						zap.Strings("symbols", symbolChunk),
 						zap.Error(err),
 					)
+					errorsMu.Lock()
+					errors = append(errors, err)
+					errorsMu.Unlock()
 					return
 				}
 
@@ -379,6 +389,11 @@ func (h *BatchPriceHandler) getBatchPricesParallel(ctx context.Context, symbols 
 	}
 
 	wg.Wait()
+
+	// 如果有错误，返回第一个错误
+	if len(errors) > 0 {
+		return nil, errors[0]
+	}
 
 	if len(allPrices) == 0 {
 		return nil, fmt.Errorf("未获取到任何价格数据")

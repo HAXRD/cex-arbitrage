@@ -143,10 +143,21 @@ func TestPricesAPI_BatchQuery(t *testing.T) {
 
 	router.GET("/prices", func(c *gin.Context) {
 		symbols := c.QueryArray("symbols")
-		if len(symbols) == 0 {
+		
+		// 过滤空字符串
+		var validSymbols []string
+		for _, symbol := range symbols {
+			if symbol != "" {
+				validSymbols = append(validSymbols, symbol)
+			}
+		}
+		
+		if len(validSymbols) == 0 {
 			BadRequestResponse(c, "缺少交易对参数", nil)
 			return
 		}
+		
+		symbols = validSymbols
 
 		// 模拟批量价格查询
 		prices := make([]map[string]interface{}, len(symbols))
@@ -202,6 +213,11 @@ func TestPricesAPI_BatchQuery(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", "/prices?symbols=", nil)
 		router.ServeHTTP(w, req)
+
+		// 打印实际响应以便调试
+		if w.Code != http.StatusBadRequest {
+			t.Logf("Response body: %s", w.Body.String())
+		}
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 
@@ -269,7 +285,7 @@ func TestPricesAPI_Cache(t *testing.T) {
 		// 验证缓存信息
 		data := response.Data.(map[string]interface{})
 		assert.True(t, data["cached"].(bool))
-		assert.Equal(t, 60, data["cache_ttl"])
+		assert.Equal(t, float64(60), data["cache_ttl"])
 	})
 
 	t.Run("从数据库获取价格", func(t *testing.T) {
@@ -381,7 +397,7 @@ func TestPricesAPI_PriceFormatting(t *testing.T) {
 
 		data := response.Data.(map[string]interface{})
 		assert.Equal(t, "integer", data["format"])
-		assert.Equal(t, 50000, data["price"])
+		assert.Equal(t, float64(50000), data["price"])
 	})
 
 	t.Run("科学计数法格式", func(t *testing.T) {

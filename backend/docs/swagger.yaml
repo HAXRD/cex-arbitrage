@@ -1,4 +1,4 @@
-basePath: /
+basePath: /api/v1
 definitions:
   handlers.HealthResponse:
     properties:
@@ -7,13 +7,174 @@ definitions:
       status:
         type: string
     type: object
+  Symbol:
+    properties:
+      symbol:
+        type: string
+        description: 交易对符号
+      symbol_type:
+        type: string
+        description: 交易对类型
+      status:
+        type: string
+        description: 交易对状态
+      base_asset:
+        type: string
+        description: 基础资产
+      quote_asset:
+        type: string
+        description: 计价资产
+      is_active:
+        type: boolean
+        description: 是否激活
+      created_at:
+        type: integer
+        format: int64
+        description: 创建时间戳
+      updated_at:
+        type: integer
+        format: int64
+        description: 更新时间戳
+    type: object
+  Kline:
+    properties:
+      symbol:
+        type: string
+        description: 交易对符号
+      interval:
+        type: string
+        description: 时间间隔
+      open_time:
+        type: integer
+        format: int64
+        description: 开盘时间
+      close_time:
+        type: integer
+        format: int64
+        description: 收盘时间
+      open_price:
+        type: number
+        format: float
+        description: 开盘价
+      high_price:
+        type: number
+        format: float
+        description: 最高价
+      low_price:
+        type: number
+        format: float
+        description: 最低价
+      close_price:
+        type: number
+        format: float
+        description: 收盘价
+      volume:
+        type: number
+        format: float
+        description: 成交量
+      quote_volume:
+        type: number
+        format: float
+        description: 成交额
+      trade_count:
+        type: integer
+        description: 成交笔数
+    type: object
+  PriceTick:
+    properties:
+      symbol:
+        type: string
+        description: 交易对符号
+      last_price:
+        type: number
+        format: float
+        description: 最新价格
+      bid_price:
+        type: number
+        format: float
+        description: 买一价
+      ask_price:
+        type: number
+        format: float
+        description: 卖一价
+      base_volume:
+        type: number
+        format: float
+        description: 基础资产成交量
+      quote_volume:
+        type: number
+        format: float
+        description: 计价资产成交量
+      timestamp:
+        type: integer
+        format: int64
+        description: 时间戳
+    type: object
+  MonitoringConfig:
+    properties:
+      id:
+        type: integer
+        description: 配置ID
+      name:
+        type: string
+        description: 配置名称
+      symbol:
+        type: string
+        description: 交易对符号
+      interval:
+        type: string
+        description: 时间间隔
+      parameters:
+        type: object
+        description: 配置参数
+      is_default:
+        type: boolean
+        description: 是否为默认配置
+      is_active:
+        type: boolean
+        description: 是否激活
+      created_at:
+        type: integer
+        format: int64
+        description: 创建时间戳
+      updated_at:
+        type: integer
+        format: int64
+        description: 更新时间戳
+    type: object
+  ErrorResponse:
+    properties:
+      error:
+        type: string
+        description: 错误信息
+      code:
+        type: integer
+        description: 错误代码
+    type: object
+  PaginationResponse:
+    properties:
+      data:
+        type: array
+        items:
+          type: object
+        description: 数据列表
+      total:
+        type: integer
+        description: 总数量
+      page:
+        type: integer
+        description: 当前页码
+      page_size:
+        type: integer
+        description: 每页大小
+    type: object
 host: localhost:8080
 info:
   contact:
     email: support@swagger.io
     name: API支持
     url: http://www.swagger.io/support
-  description: 加密货币合约交易信号捕捉系统 API
+  description: 加密货币合约交易信号捕捉系统 API - 提供实时价格、历史K线数据、交易对管理和监控配置等功能
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
@@ -36,5 +197,738 @@ paths:
       summary: 健康检查
       tags:
       - 系统
+  /symbols:
+    get:
+      consumes:
+      - application/json
+      description: 获取交易对列表，支持分页和搜索
+      produces:
+      - application/json
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        required: false
+        type: integer
+      - description: 每页大小
+        in: query
+        name: page_size
+        required: false
+        type: integer
+      - description: 搜索关键词
+        in: query
+        name: search
+        required: false
+        type: string
+      - description: 基础资产过滤
+        in: query
+        name: base_asset
+        required: false
+        type: string
+      - description: 计价资产过滤
+        in: query
+        name: quote_asset
+        required: false
+        type: string
+      - description: 状态过滤
+        in: query
+        name: status
+        required: false
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PaginationResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 获取交易对列表
+      tags:
+      - 交易对管理
+  /symbols/{symbol}:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定交易对的详细信息
+      produces:
+      - application/json
+      parameters:
+      - description: 交易对符号
+        in: path
+        name: symbol
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Symbol'
+        "404":
+          description: 交易对不存在
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 获取交易对详情
+      tags:
+      - 交易对管理
+  /symbols/search:
+    get:
+      consumes:
+      - application/json
+      description: 搜索交易对
+      produces:
+      - application/json
+      parameters:
+      - description: 搜索关键词
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        required: false
+        type: integer
+      - description: 每页大小
+        in: query
+        name: page_size
+        required: false
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PaginationResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 搜索交易对
+      tags:
+      - 交易对管理
+  /klines/{symbol}:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定交易对的K线数据
+      produces:
+      - application/json
+      parameters:
+      - description: 交易对符号
+        in: path
+        name: symbol
+        required: true
+        type: string
+      - description: 时间间隔
+        in: query
+        name: interval
+        required: true
+        type: string
+        enum:
+        - 1m
+        - 5m
+        - 15m
+        - 30m
+        - 1h
+        - 4h
+        - 1d
+        - 1w
+        - 1M
+      - description: 开始时间
+        in: query
+        name: start_time
+        required: false
+        type: string
+      - description: 结束时间
+        in: query
+        name: end_time
+        required: false
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        required: false
+        type: integer
+      - description: 每页大小
+        in: query
+        name: page_size
+        required: false
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PaginationResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 获取K线数据
+      tags:
+      - 历史数据
+  /klines/{symbol}/statistics:
+    get:
+      consumes:
+      - application/json
+      description: 获取K线统计信息
+      produces:
+      - application/json
+      parameters:
+      - description: 交易对符号
+        in: path
+        name: symbol
+        required: true
+        type: string
+      - description: 时间间隔
+        in: query
+        name: interval
+        required: true
+        type: string
+      - description: 开始时间
+        in: query
+        name: start_time
+        required: false
+        type: string
+      - description: 结束时间
+        in: query
+        name: end_time
+        required: false
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+            properties:
+              total_count:
+                type: integer
+                description: 总数量
+              price_range:
+                type: object
+                properties:
+                  high:
+                    type: number
+                    format: float
+                  low:
+                    type: number
+                    format: float
+                  open:
+                    type: number
+                    format: float
+                  close:
+                    type: number
+                    format: float
+              volume_stats:
+                type: object
+                properties:
+                  total_volume:
+                    type: number
+                    format: float
+                  average_volume:
+                    type: number
+                    format: float
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 获取K线统计信息
+      tags:
+      - 历史数据
+  /klines/{symbol}/latest:
+    get:
+      consumes:
+      - application/json
+      description: 获取最新K线数据
+      produces:
+      - application/json
+      parameters:
+      - description: 交易对符号
+        in: path
+        name: symbol
+        required: true
+        type: string
+      - description: 时间间隔
+        in: query
+        name: interval
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Kline'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 获取最新K线数据
+      tags:
+      - 历史数据
+  /prices/{symbol}:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定交易对的实时价格
+      produces:
+      - application/json
+      parameters:
+      - description: 交易对符号
+        in: path
+        name: symbol
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PriceTick'
+        "404":
+          description: 价格数据不存在
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 获取实时价格
+      tags:
+      - 实时价格
+  /prices:
+    get:
+      consumes:
+      - application/json
+      description: 批量获取多个交易对的实时价格
+      produces:
+      - application/json
+      parameters:
+      - description: 交易对符号列表，用逗号分隔
+        in: query
+        name: symbols
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/definitions/PriceTick'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 批量获取实时价格
+      tags:
+      - 实时价格
+  /prices/{symbol}/history:
+    get:
+      consumes:
+      - application/json
+      description: 获取价格历史数据
+      produces:
+      - application/json
+      parameters:
+      - description: 交易对符号
+        in: path
+        name: symbol
+        required: true
+        type: string
+      - description: 开始时间
+        in: query
+        name: start_time
+        required: false
+        type: string
+      - description: 结束时间
+        in: query
+        name: end_time
+        required: false
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        required: false
+        type: integer
+      - description: 每页大小
+        in: query
+        name: page_size
+        required: false
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PaginationResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 获取价格历史数据
+      tags:
+      - 实时价格
+  /prices/{symbol}/statistics:
+    get:
+      consumes:
+      - application/json
+      description: 获取价格统计信息
+      produces:
+      - application/json
+      parameters:
+      - description: 交易对符号
+        in: path
+        name: symbol
+        required: true
+        type: string
+      - description: 开始时间
+        in: query
+        name: start_time
+        required: false
+        type: string
+      - description: 结束时间
+        in: query
+        name: end_time
+        required: false
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+            properties:
+              current_price:
+                type: number
+                format: float
+                description: 当前价格
+              highest_price:
+                type: number
+                format: float
+                description: 最高价格
+              lowest_price:
+                type: number
+                format: float
+                description: 最低价格
+              average_price:
+                type: number
+                format: float
+                description: 平均价格
+              price_change:
+                type: number
+                format: float
+                description: 价格变化
+              change_percent:
+                type: number
+                format: float
+                description: 变化百分比
+              volume:
+                type: number
+                format: float
+                description: 成交量
+              trade_count:
+                type: integer
+                description: 成交笔数
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 获取价格统计信息
+      tags:
+      - 实时价格
+  /monitoring-configs:
+    get:
+      consumes:
+      - application/json
+      description: 获取监控配置列表
+      produces:
+      - application/json
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        required: false
+        type: integer
+      - description: 每页大小
+        in: query
+        name: page_size
+        required: false
+        type: integer
+      - description: 搜索关键词
+        in: query
+        name: search
+        required: false
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PaginationResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 获取监控配置列表
+      tags:
+      - 配置管理
+    post:
+      consumes:
+      - application/json
+      description: 创建新的监控配置
+      produces:
+      - application/json
+      parameters:
+      - description: 监控配置数据
+        in: body
+        name: config
+        required: true
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+              description: 配置名称
+            symbol:
+              type: string
+              description: 交易对符号
+            interval:
+              type: string
+              description: 时间间隔
+            parameters:
+              type: object
+              description: 配置参数
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            $ref: '#/definitions/MonitoringConfig'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 创建监控配置
+      tags:
+      - 配置管理
+  /monitoring-configs/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定监控配置
+      produces:
+      - application/json
+      parameters:
+      - description: 配置ID
+        in: path
+        name: id
+        required: true
+        type: integer
+        format: int64
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/MonitoringConfig'
+        "404":
+          description: 配置不存在
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 获取监控配置详情
+      tags:
+      - 配置管理
+    put:
+      consumes:
+      - application/json
+      description: 更新监控配置
+      produces:
+      - application/json
+      parameters:
+      - description: 配置ID
+        in: path
+        name: id
+        required: true
+        type: integer
+        format: int64
+      - description: 监控配置数据
+        in: body
+        name: config
+        required: true
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+              description: 配置名称
+            symbol:
+              type: string
+              description: 交易对符号
+            interval:
+              type: string
+              description: 时间间隔
+            parameters:
+              type: object
+              description: 配置参数
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/MonitoringConfig'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: 配置不存在
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 更新监控配置
+      tags:
+      - 配置管理
+    delete:
+      consumes:
+      - application/json
+      description: 删除监控配置
+      produces:
+      - application/json
+      parameters:
+      - description: 配置ID
+        in: path
+        name: id
+        required: true
+        type: integer
+        format: int64
+      responses:
+        "204":
+          description: 删除成功
+        "404":
+          description: 配置不存在
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 删除监控配置
+      tags:
+      - 配置管理
+  /monitoring-configs/default:
+    get:
+      consumes:
+      - application/json
+      description: 获取默认监控配置
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/MonitoringConfig'
+        "404":
+          description: 默认配置不存在
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 获取默认监控配置
+      tags:
+      - 配置管理
+  /monitoring-configs/{id}/set-default:
+    post:
+      consumes:
+      - application/json
+      description: 设置默认监控配置
+      produces:
+      - application/json
+      parameters:
+      - description: 配置ID
+        in: path
+        name: id
+        required: true
+        type: integer
+        format: int64
+      responses:
+        "200":
+          description: 设置成功
+          schema:
+            $ref: '#/definitions/MonitoringConfig'
+        "404":
+          description: 配置不存在
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 设置默认监控配置
+      tags:
+      - 配置管理
+  /monitoring-configs/search:
+    get:
+      consumes:
+      - application/json
+      description: 搜索监控配置
+      produces:
+      - application/json
+      parameters:
+      - description: 搜索关键词
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        required: false
+        type: integer
+      - description: 每页大小
+        in: query
+        name: page_size
+        required: false
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PaginationResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 搜索监控配置
+      tags:
+      - 配置管理
+  /monitoring-configs/validate:
+    post:
+      consumes:
+      - application/json
+      description: 验证监控配置
+      produces:
+      - application/json
+      parameters:
+      - description: 监控配置数据
+        in: body
+        name: config
+        required: true
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+              description: 配置名称
+            symbol:
+              type: string
+              description: 交易对符号
+            interval:
+              type: string
+              description: 时间间隔
+            parameters:
+              type: object
+              description: 配置参数
+      responses:
+        "200":
+          description: 验证成功
+          schema:
+            type: object
+            properties:
+              valid:
+                type: boolean
+                description: 是否有效
+              errors:
+                type: array
+                items:
+                  type: string
+                description: 错误信息列表
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 验证监控配置
+      tags:
+      - 配置管理
 swagger: "2.0"
 
