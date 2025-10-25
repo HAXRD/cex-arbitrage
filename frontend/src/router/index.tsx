@@ -10,6 +10,7 @@ const Configuration = lazy(() => import('@/pages/Configuration'))
 const Backtest = lazy(() => import('@/pages/Backtest'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 const Test = lazy(() => import('@/pages/Test'))
+const ChartDemo = lazy(() => import('@/pages/ChartDemo'))
 
 // 路由配置
 export const router = createBrowserRouter([
@@ -26,6 +27,14 @@ export const router = createBrowserRouter([
                 element: (
                     <Suspense fallback={<LoadingSpinner />}>
                         <Test />
+                    </Suspense>
+                )
+            },
+            {
+                path: 'charts',
+                element: (
+                    <Suspense fallback={<LoadingSpinner />}>
+                        <ChartDemo />
                     </Suspense>
                 )
             },

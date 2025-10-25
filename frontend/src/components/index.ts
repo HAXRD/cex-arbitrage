@@ -9,6 +9,9 @@ export { Header } from './Layout/Header'
 export { Sidebar } from './Layout/Sidebar'
 export { LoadingSpinner } from './LoadingSpinner/LoadingSpinner'
 
+// 图表组件导出
+export * from './Charts'
+
 // 导出组件类型
 export type { ButtonProps } from './Button/Button'
 export type { CardProps } from './Card/Card'
