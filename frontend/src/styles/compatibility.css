@@ -1,0 +1,422 @@
+/* Ant Design 和 Tailwind CSS 兼容性配置 */
+
+/* 重置 Ant Design 的全局样式，避免与 Tailwind 冲突 */
+.ant-layout {
+    background: transparent !important;
+}
+
+.ant-layout-header {
+    background: #fff !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+.ant-layout-sider {
+    background: #fff !important;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+.ant-layout-content {
+    background: #f5f5f5 !important;
+}
+
+/* 按钮组件兼容性 */
+.ant-btn {
+    @apply transition-all duration-200;
+}
+
+.ant-btn-primary {
+    @apply bg-primary-500 border-primary-500 hover:bg-primary-600 hover:border-primary-600;
+}
+
+.ant-btn-default {
+    @apply bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400;
+}
+
+/* 卡片组件兼容性 */
+.ant-card {
+    @apply shadow-sm border border-gray-200;
+}
+
+.ant-card-head {
+    @apply border-b border-gray-200 bg-gray-50;
+}
+
+.ant-card-body {
+    @apply p-6;
+}
+
+/* 表格组件兼容性 */
+.ant-table {
+    @apply shadow-sm border border-gray-200 rounded-lg overflow-hidden;
+}
+
+.ant-table-thead>tr>th {
+    @apply bg-gray-50 text-gray-700 font-semibold;
+}
+
+.ant-table-tbody>tr:hover>td {
+    @apply bg-gray-50;
+}
+
+/* 输入框组件兼容性 */
+.ant-input {
+    @apply border-gray-300 focus:border-primary-500 focus:ring-primary-500;
+}
+
+.ant-input:focus {
+    @apply shadow-sm;
+}
+
+/* 选择器组件兼容性 */
+.ant-select {
+    @apply border-gray-300;
+}
+
+.ant-select-focused .ant-select-selector {
+    @apply border-primary-500 ring-primary-500;
+}
+
+/* 菜单组件兼容性 */
+.ant-menu {
+    @apply border-r border-gray-200;
+}
+
+.ant-menu-item {
+    @apply transition-colors duration-200;
+}
+
+.ant-menu-item:hover {
+    @apply bg-gray-50;
+}
+
+.ant-menu-item-selected {
+    @apply bg-primary-50 text-primary-600;
+}
+
+/* 分页组件兼容性 */
+.ant-pagination {
+    @apply flex justify-center;
+}
+
+.ant-pagination-item {
+    @apply border-gray-300;
+}
+
+.ant-pagination-item-active {
+    @apply bg-primary-500 border-primary-500 text-white;
+}
+
+/* 模态框组件兼容性 */
+.ant-modal {
+    @apply rounded-lg;
+}
+
+.ant-modal-header {
+    @apply border-b border-gray-200 bg-gray-50;
+}
+
+.ant-modal-body {
+    @apply p-6;
+}
+
+.ant-modal-footer {
+    @apply border-t border-gray-200 bg-gray-50;
+}
+
+/* 通知组件兼容性 */
+.ant-notification {
+    @apply shadow-lg;
+}
+
+.ant-notification-notice {
+    @apply rounded-lg border border-gray-200;
+}
+
+/* 工具提示组件兼容性 */
+.ant-tooltip {
+    @apply shadow-lg;
+}
+
+.ant-tooltip-inner {
+    @apply bg-gray-900 text-white rounded-md;
+}
+
+/* 下拉菜单组件兼容性 */
+.ant-dropdown {
+    @apply shadow-lg border border-gray-200 rounded-lg;
+}
+
+.ant-dropdown-menu {
+    @apply rounded-lg;
+}
+
+.ant-dropdown-menu-item {
+    @apply transition-colors duration-200;
+}
+
+.ant-dropdown-menu-item:hover {
+    @apply bg-gray-50;
+}
+
+/* 步骤条组件兼容性 */
+.ant-steps {
+    @apply bg-white p-4 rounded-lg shadow-sm border border-gray-200;
+}
+
+.ant-steps-item-title {
+    @apply text-gray-700;
+}
+
+.ant-steps-item-description {
+    @apply text-gray-500;
+}
+
+/* 标签组件兼容性 */
+.ant-tag {
+    @apply rounded-md border border-gray-300;
+}
+
+.ant-tag-success {
+    @apply bg-green-50 text-green-700 border-green-200;
+}
+
+.ant-tag-error {
+    @apply bg-red-50 text-red-700 border-red-200;
+}
+
+.ant-tag-warning {
+    @apply bg-yellow-50 text-yellow-700 border-yellow-200;
+}
+
+/* 进度条组件兼容性 */
+.ant-progress {
+    @apply bg-gray-200 rounded-full;
+}
+
+.ant-progress-bg {
+    @apply bg-primary-500 rounded-full;
+}
+
+/* 时间选择器组件兼容性 */
+.ant-picker {
+    @apply border-gray-300;
+}
+
+.ant-picker-focused {
+    @apply border-primary-500 ring-primary-500;
+}
+
+/* 开关组件兼容性 */
+.ant-switch {
+    @apply bg-gray-400;
+}
+
+.ant-switch-checked {
+    @apply bg-primary-500;
+}
+
+/* 滑块组件兼容性 */
+.ant-slider {
+    @apply bg-gray-200;
+}
+
+.ant-slider-track {
+    @apply bg-primary-500;
+}
+
+.ant-slider-handle {
+    @apply border-primary-500;
+}
+
+/* 评分组件兼容性 */
+.ant-rate {
+    @apply text-yellow-400;
+}
+
+/* 锚点组件兼容性 */
+.ant-anchor {
+    @apply border-r border-gray-200;
+}
+
+.ant-anchor-link {
+    @apply text-gray-600;
+}
+
+.ant-anchor-link-active {
+    @apply text-primary-600;
+}
+
+/* 面包屑组件兼容性 */
+.ant-breadcrumb {
+    @apply text-gray-600;
+}
+
+.ant-breadcrumb-link {
+    @apply text-gray-600 hover:text-primary-600;
+}
+
+/* 徽章组件兼容性 */
+.ant-badge {
+    @apply relative;
+}
+
+.ant-badge-count {
+    @apply bg-red-500 text-white rounded-full;
+}
+
+/* 头像组件兼容性 */
+.ant-avatar {
+    @apply bg-gray-300 text-gray-600;
+}
+
+/* 空状态组件兼容性 */
+.ant-empty {
+    @apply text-gray-500;
+}
+
+.ant-empty-description {
+    @apply text-gray-500;
+}
+
+/* 骨架屏组件兼容性 */
+.ant-skeleton {
+    @apply bg-gray-200;
+}
+
+.ant-skeleton-content .ant-skeleton-title {
+    @apply bg-gray-200;
+}
+
+.ant-skeleton-content .ant-skeleton-paragraph>li {
+    @apply bg-gray-200;
+}
+
+/* 结果组件兼容性 */
+.ant-result {
+    @apply text-center;
+}
+
+.ant-result-title {
+    @apply text-gray-700;
+}
+
+.ant-result-subtitle {
+    @apply text-gray-500;
+}
+
+/* 描述列表组件兼容性 */
+.ant-descriptions {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200;
+}
+
+.ant-descriptions-item-label {
+    @apply text-gray-700 font-semibold;
+}
+
+.ant-descriptions-item-content {
+    @apply text-gray-600;
+}
+
+/* 统计数值组件兼容性 */
+.ant-statistic {
+    @apply text-center;
+}
+
+.ant-statistic-title {
+    @apply text-gray-600;
+}
+
+.ant-statistic-content {
+    @apply text-gray-900;
+}
+
+/* 时间轴组件兼容性 */
+.ant-timeline {
+    @apply bg-white p-4 rounded-lg shadow-sm border border-gray-200;
+}
+
+.ant-timeline-item-content {
+    @apply text-gray-700;
+}
+
+/* 折叠面板组件兼容性 */
+.ant-collapse {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200;
+}
+
+.ant-collapse-header {
+    @apply text-gray-700 font-semibold;
+}
+
+.ant-collapse-content {
+    @apply text-gray-600;
+}
+
+/* 手风琴组件兼容性 */
+.ant-collapse-ghost .ant-collapse-item {
+    @apply border-b border-gray-200;
+}
+
+/* 抽屉组件兼容性 */
+.ant-drawer {
+    @apply shadow-lg;
+}
+
+.ant-drawer-header {
+    @apply border-b border-gray-200 bg-gray-50;
+}
+
+.ant-drawer-body {
+    @apply p-6;
+}
+
+/* 气泡确认框组件兼容性 */
+.ant-popconfirm {
+    @apply shadow-lg;
+}
+
+.ant-popconfirm-inner {
+    @apply bg-white rounded-lg border border-gray-200;
+}
+
+/* 全局样式重置 */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    margin: 0;
+    background-color: #f5f5f5;
+}
+
+/* 确保 Ant Design 组件在 Tailwind 环境中正常工作 */
+.ant-layout,
+.ant-layout-header,
+.ant-layout-sider,
+.ant-layout-content,
+.ant-layout-footer {
+    min-height: auto;
+}
+
+/* 响应式设计兼容性 */
+@media (max-width: 768px) {
+    .ant-layout-sider {
+        position: fixed;
+        height: 100vh;
+        left: 0;
+        top: 0;
+        z-index: 1000;
+    }
+
+    .ant-layout-content {
+        margin-left: 0;
+    }
+}
