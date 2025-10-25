@@ -9,6 +9,7 @@ const Symbols = lazy(() => import('@/pages/Symbols'))
 const Configuration = lazy(() => import('@/pages/Configuration'))
 const Backtest = lazy(() => import('@/pages/Backtest'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
+const Test = lazy(() => import('@/pages/Test'))
 
 // 路由配置
 export const router = createBrowserRouter([
@@ -18,7 +19,15 @@ export const router = createBrowserRouter([
         children: [
             {
                 index: true,
-                element: <Navigate to="/dashboard" replace />
+                element: <Navigate to="/test" replace />
+            },
+            {
+                path: 'test',
+                element: (
+                    <Suspense fallback={<LoadingSpinner />}>
+                        <Test />
+                    </Suspense>
+                )
             },
             {
                 path: 'dashboard',
