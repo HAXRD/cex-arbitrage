@@ -54,7 +54,6 @@ const Dashboard: React.FC = () => {
                                 price={(price as any).lastPrice || 0}
                                 change={(price as any).priceChange || 0}
                                 changePercent={(price as any).priceChangePercent || 0}
-                                symbol={symbol}
                                 size="sm"
                             />
                         ))}
