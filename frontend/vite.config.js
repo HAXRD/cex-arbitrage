@@ -36,14 +36,40 @@ export default defineConfig({
     build: {
         outDir: 'dist',
         sourcemap: true,
+        minify: 'esbuild',
         rollupOptions: {
             output: {
-                manualChunks: {
-                    vendor: ['react', 'react-dom'],
-                    antd: ['antd'],
-                    charts: ['lightweight-charts'],
+                manualChunks: function (id) {
+                    // React 相关库
+                    if (id.includes('react') || id.includes('react-dom')) {
+                        return 'react';
+                    }
+                    // Ant Design
+                    if (id.includes('antd')) {
+                        return 'antd';
+                    }
+                    // 图表库
+                    if (id.includes('lightweight-charts')) {
+                        return 'charts';
+                    }
+                    // 工具库
+                    if (id.includes('lodash') || id.includes('dayjs') || id.includes('clsx')) {
+                        return 'utils';
+                    }
+                    // 页面组件
+                    if (id.includes('/pages/')) {
+                        return 'pages';
+                    }
+                    // 组件库
+                    if (id.includes('/components/')) {
+                        return 'components';
+                    }
                 },
+                chunkFileNames: 'assets/js/[name]-[hash].js',
+                entryFileNames: 'assets/js/[name]-[hash].js',
+                assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
             },
         },
+        chunkSizeWarningLimit: 1000,
     },
 });

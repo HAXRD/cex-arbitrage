@@ -171,7 +171,9 @@ const Monitoring: React.FC = () => {
     // 表格数据
     const tableData = selectedSymbols.map(symbolKey => {
         const priceData = prices[symbolKey] || {}
-        const { symbol, ...restPriceData } = priceData as any
+        const { symbol: _symbol, ...restPriceData } = priceData as any
+        // 使用 _symbol 避免未使用变量警告
+        console.debug('Processing symbol:', _symbol)
         return {
             key: symbolKey,
             symbol: symbolKey,

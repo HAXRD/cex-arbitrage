@@ -15,6 +15,9 @@ export * from './Charts'
 // 交易对列表组件导出
 export * from './SymbolList'
 
+// 虚拟滚动组件导出
+export * from './VirtualScroll'
+
 // 导出组件类型
 export type { ButtonProps } from './Button/Button'
 export type { CardProps } from './Card/Card'

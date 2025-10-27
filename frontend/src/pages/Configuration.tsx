@@ -49,7 +49,7 @@ const Configuration: React.FC = () => {
         try {
             // await updateConfig(values)
             message.success('配置保存成功')
-        } catch (error) {
+        } catch {
             message.error('配置保存失败')
         } finally {
             setLoading(false)
@@ -67,7 +67,7 @@ const Configuration: React.FC = () => {
         try {
             // exportConfig()
             message.success('配置导出成功')
-        } catch (error) {
+        } catch {
             message.error('配置导出失败')
         }
     }
@@ -81,7 +81,7 @@ const Configuration: React.FC = () => {
                 // importConfig(configData)
                 form.setFieldsValue(configData)
                 message.success('配置导入成功')
-            } catch (error) {
+            } catch {
                 message.error('配置文件格式错误')
             }
         }

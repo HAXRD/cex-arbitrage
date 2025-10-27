@@ -2,7 +2,7 @@ import { useEffect, useCallback } from 'react'
 import { useAppStore } from './appStore'
 
 // 存储管理钩子
-export const useStorageManager = () => {
+export const useStorageManager = (_config = {}) => {
     const { } = useAppStore()
 
     // 检查存储健康状态
