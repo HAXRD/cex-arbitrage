@@ -1,0 +1,272 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 自定义组件样式 */
+@layer components {
+
+    /* 按钮组件 */
+    .btn {
+        @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200;
+    }
+
+    .btn-primary {
+        @apply btn bg-primary-500 text-white hover:bg-primary-600 focus:ring-primary-500;
+    }
+
+    .btn-secondary {
+        @apply btn bg-gray-500 text-white hover:bg-gray-600 focus:ring-gray-500;
+    }
+
+    .btn-success {
+        @apply btn bg-green-500 text-white hover:bg-green-600 focus:ring-green-500;
+    }
+
+    .btn-danger {
+        @apply btn bg-red-500 text-white hover:bg-red-600 focus:ring-red-500;
+    }
+
+    .btn-warning {
+        @apply btn bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-yellow-500;
+    }
+
+    /* 卡片组件 */
+    .card {
+        @apply bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden;
+    }
+
+    .card-header {
+        @apply px-6 py-4 border-b border-gray-200 bg-gray-50;
+    }
+
+    .card-body {
+        @apply px-6 py-4;
+    }
+
+    .card-footer {
+        @apply px-6 py-4 border-t border-gray-200 bg-gray-50;
+    }
+
+    /* 价格显示组件 */
+    .price-card {
+        @apply card p-4;
+    }
+
+    .price-positive {
+        @apply text-green-600 font-semibold;
+    }
+
+    .price-negative {
+        @apply text-red-600 font-semibold;
+    }
+
+    .price-neutral {
+        @apply text-gray-600 font-semibold;
+    }
+
+    /* 图表容器 */
+    .chart-container {
+        @apply w-full h-96 bg-white rounded-lg shadow-sm border border-gray-200 p-4;
+    }
+
+    /* 表格样式 */
+    .table-container {
+        @apply overflow-x-auto;
+    }
+
+    .table {
+        @apply min-w-full divide-y divide-gray-200;
+    }
+
+    .table-header {
+        @apply bg-gray-50;
+    }
+
+    .table-header-cell {
+        @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+    }
+
+    .table-body {
+        @apply bg-white divide-y divide-gray-200;
+    }
+
+    .table-row {
+        @apply hover:bg-gray-50 transition-colors duration-150;
+    }
+
+    .table-cell {
+        @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+    }
+
+    /* 状态指示器 */
+    .status-online {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800;
+    }
+
+    .status-offline {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800;
+    }
+
+    .status-warning {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800;
+    }
+
+    /* 加载状态 */
+    .loading-spinner {
+        @apply animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500;
+    }
+
+    .loading-dots {
+        @apply flex space-x-1;
+    }
+
+    .loading-dot {
+        @apply w-2 h-2 bg-primary-500 rounded-full animate-pulse;
+    }
+
+    /* 响应式网格 */
+    .grid-responsive {
+        @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+    }
+
+    .grid-cards {
+        @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+    }
+
+    /* 布局组件 */
+    .layout-container {
+        @apply min-h-screen bg-gray-50;
+    }
+
+    .layout-header {
+        @apply bg-white shadow-sm border-b border-gray-200;
+    }
+
+    .layout-sidebar {
+        @apply bg-white shadow-sm border-r border-gray-200;
+    }
+
+    .layout-main {
+        @apply flex-1 p-6;
+    }
+
+    /* 表单组件 */
+    .form-group {
+        @apply mb-4;
+    }
+
+    .form-label {
+        @apply block text-sm font-medium text-gray-700 mb-1;
+    }
+
+    .form-input {
+        @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500;
+    }
+
+    .form-error {
+        @apply text-red-600 text-sm mt-1;
+    }
+
+    /* 工具提示 */
+    .tooltip {
+        @apply absolute z-10 px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg;
+    }
+
+    /* 模态框 */
+    .modal-overlay {
+        @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
+    }
+
+    .modal-content {
+        @apply bg-white rounded-lg shadow-xl max-w-md w-full mx-4;
+    }
+
+    /* 通知组件 */
+    .notification {
+        @apply fixed top-4 right-4 z-50 max-w-sm w-full bg-white rounded-lg shadow-lg border border-gray-200;
+    }
+
+    .notification-success {
+        @apply notification border-l-4 border-green-500;
+    }
+
+    .notification-error {
+        @apply notification border-l-4 border-red-500;
+    }
+
+    .notification-warning {
+        @apply notification border-l-4 border-yellow-500;
+    }
+
+    .notification-info {
+        @apply notification border-l-4 border-blue-500;
+    }
+}
+
+/* 自定义工具类 */
+@layer utilities {
+
+    /* 文本省略 */
+    .text-ellipsis-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .text-ellipsis-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* 滚动条样式 */
+    .scrollbar-thin {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e0 #f7fafc;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-track {
+        background: #f7fafc;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 3px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0;
+    }
+
+    /* 渐变背景 */
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+
+    .bg-gradient-warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    /* 阴影效果 */
+    .shadow-soft {
+        box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04);
+    }
+
+    .shadow-medium {
+        box-shadow: 0 4px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .shadow-strong {
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15), 0 2px 10px -2px rgba(0, 0, 0, 0.05);
+    }
+}
